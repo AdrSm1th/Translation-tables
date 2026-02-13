@@ -175,7 +175,7 @@ class Program
                     int idx = variablesTable.Search(key);
                     if (idx == -1)
                     {
-                        Console.WriteLine("Element not fount");
+                        Console.WriteLine("Element not found");
                         break;
                     }
 
