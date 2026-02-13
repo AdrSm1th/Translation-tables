@@ -8,13 +8,12 @@ namespace Translation_tables
 {
     static class BinarySearch
     {
-        public static bool Search(string elem, int key, List<Word> buff)
+        public static bool Search(string elem, List<Word> buff)
         {
             int low = 0, high = buff.Count - 1, middle = 0;
             while (low <= high)
             {
                 middle = (low + high) / 2;
-                Console.WriteLine(buff[middle].name);
                 int comparison = string.Compare(elem, buff[middle].name, StringComparison.CurrentCulture);
                 if (comparison < 0)
                 {

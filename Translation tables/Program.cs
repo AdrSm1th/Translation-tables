@@ -58,10 +58,10 @@ class PermanentTable
     {
         switch (key)
         {
-            case 1: return BinarySearch.Search(elem, key, Alphabet);
-            case 2: return BinarySearch.Search(elem, key, ReservedWords);
-            case 3: return BinarySearch.Search(elem, key, Operators);
-            case 4: return BinarySearch.Search(elem, key, Separators);
+            case 1: return BinarySearch.Search(elem, Alphabet);
+            case 2: return BinarySearch.Search(elem, ReservedWords);
+            case 3: return BinarySearch.Search(elem, Operators);
+            case 4: return BinarySearch.Search(elem, Separators);
             default: throw new ArgumentOutOfRangeException("key");
         }
     }
@@ -73,16 +73,127 @@ class Program
     {
         Directory.SetCurrentDirectory("C:\\Users\\sasha\\source\\repos\\Translation tables\\Translation tables");
 
-        PermanentTable permanentTables = new PermanentTable();
+        PermanentTable permanentTable = new PermanentTable();
         VariablesTable variablesTable = new VariablesTable();
 
-        Console.WriteLine(permanentTables.Search("a", 1));
+        while (true)
+        {
+            int choice = 0;
+            string key = "";
 
-        variablesTable.InsertConstant("-5", "NEGR");
-        variablesTable.InsertIdentificator("a", "sNegr", 1);
+            Console.WriteLine("<1> - Find element in permanent table");
+            Console.WriteLine("<2> - Insert element");
+            Console.WriteLine("<3> - Add attribute");
+            Console.WriteLine("<4> - Find element in dynamic table");
+            Console.WriteLine("<5> - Find attribute");
+            Console.WriteLine("<6> - Exit");
 
-        Console.WriteLine(variablesTable.Search("NEGR"));
-        Console.WriteLine(variablesTable.Search("NEGRi"));
-        Console.WriteLine(variablesTable.Search("sNegr"));
+            choice = int.Parse(Console.ReadLine());
+
+            switch (choice)
+            {
+                case 1:
+                    Console.WriteLine("<1> - Find letter");
+                    Console.WriteLine("<2> - Find word");
+                    Console.WriteLine("<3> - Find operator");
+                    Console.WriteLine("<4> - Find separator");
+                    choice = int.Parse(Console.ReadLine());
+
+                    if(choice < 1 || choice > 4)
+                    {
+                        Console.WriteLine("Unknown command!");
+                        break;
+                    }
+
+                    Console.WriteLine("Enter element name");
+                    string name = Console.ReadLine();
+
+                    Console.WriteLine(permanentTable.Search(name, choice));
+                    break;
+
+                case 2:
+                    Console.WriteLine("<1> - Insert constant");
+                    Console.WriteLine("<2> - Insert identificator");
+                    choice = int.Parse(Console.ReadLine());
+
+
+                    if (choice < 1 || choice > 2)
+                    {
+                        Console.WriteLine("Unknown command!");
+                        break;
+                    }
+
+                    Console.WriteLine("Enter element key");
+                    key = Console.ReadLine();
+
+                    if (choice == 1) variablesTable.InsertConstant(key);
+                    if (choice == 2) variablesTable.InsertIdentificator(key);
+
+                    break;
+
+                case 3:
+                    Console.WriteLine("<1> - Insert constant attribute");
+                    Console.WriteLine("<2> - Insert identificator attribute");
+                    choice = int.Parse(Console.ReadLine());
+
+                    if (choice < 1 || choice > 2)
+                    {
+                        Console.WriteLine("Unknown command!");
+                        break;
+                    }
+
+                    if(choice == 1)
+                    {
+                        Console.WriteLine("Enter key and value");
+                        string[] input = Console.ReadLine().Split(' ');
+                        key = input[0];
+                        int value = int.Parse(input[1]);
+                        variablesTable.AddAttribute(key, value: value);
+                    }
+
+                    if(choice == 2)
+                    {
+                        Console.WriteLine("Enter key, name and scope");
+                        string[] input = Console.ReadLine().Split(' ');
+                        key = input[0];
+                        name = input[1];
+                        int scope = int.Parse(input[2]);
+                        variablesTable.AddAttribute(key, name: name, scope: scope);
+                    }
+                    break;
+
+                case 4:
+                    Console.WriteLine("Enter key");
+                    key = Console.ReadLine();
+                    if (variablesTable.Search(key) != -1) Console.WriteLine("true");
+                    else Console.WriteLine("false");
+                    break;
+
+                case 5:
+                    Console.WriteLine("Enter key");
+                    key = Console.ReadLine();
+                    int idx = variablesTable.Search(key);
+                    if (idx == -1)
+                    {
+                        Console.WriteLine("Element not fount");
+                        break;
+                    }
+
+                    if (variablesTable.dynamicElements[idx] is Constant constant)
+                    {
+                        constant = (Constant)variablesTable.dynamicElements[idx];
+                        Console.WriteLine($"Value = {constant.Value}");
+                    }
+
+                    if (variablesTable.dynamicElements[idx] is Identificator identificator)
+                    {
+                        identificator = (Identificator)variablesTable.dynamicElements[idx];
+                        Console.WriteLine($"Name: {identificator.Name}\nScope: {identificator.Scope}");
+                    }
+                    break;
+
+                default: Console.WriteLine("Unknown command!"); break;
+            }
+        }
     }
 }

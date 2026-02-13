@@ -7,45 +7,51 @@ using System.Threading.Tasks;
 
 namespace Translation_tables
 {
-    //Убрать три хуйни. Сделать через несколько конструкторов, да прибудут с нами nullы
     interface IDynamicElement
-    { 
-        public string Name { get; set; }
+    {
         public string Key { get; set; }
     }
 
-    struct Identificator(string name, string key, int scope) : IDynamicElement
+    struct Identificator(string key) : IDynamicElement
     {
-        public string Name { get; set; } = name;
+        public string? Name { get; set; }
         public string Key { get; set; } = key;
-        public int Scope { get; set; } = scope;
+        public int Scope { get; set; }
     }
 
-    struct Constant(string name, string key) : IDynamicElement
+    struct Constant(string key) : IDynamicElement
     {
-        public string Name { get; set; } = name;
+        public int Value { get; set; }
         public string Key { get; set; } = key;
     }
+
+    //class DynamicElement(string key)
+    //{
+    //    public string Key { get; set; } = key;
+    //    public string? Name { get; set; }
+    //    public int Value { get; set; }
+    //    public int Scope { get; set; }
+    //}
 
     class VariablesTable
     {
         private const int tableSize = 10000;
-        private IDynamicElement[] dynamicElements = new IDynamicElement[tableSize];
+        public IDynamicElement[] dynamicElements = new IDynamicElement[tableSize];
 
-        public uint Hash(string key)
+        public int Hash(string key)
         {
-            uint h = 5371;
+            int h = 5371;
             foreach (char c in key)
             {
                 h = (h * 33) ^ c;
             }
-            return (h % tableSize);
+            return Math.Abs(h % tableSize);
         }
 
-        public void InsertIdentificator(string name, string key, int scope)
+        public void InsertConstant(string key)
         {
-            uint hash = Hash(key);
-            if (dynamicElements[hash] != null) dynamicElements[hash] = new Identificator(name, key, scope);
+            int hash = Hash(key);
+            if (dynamicElements[hash] != null) dynamicElements[hash] = new Constant(key);
             else
             {
                 int i = 0;
@@ -54,14 +60,14 @@ namespace Translation_tables
                     hash = (hash + 1) % tableSize;
                     if (++i == tableSize) return;
                 }
-                dynamicElements[hash] = new Identificator(name, key, scope);
+                dynamicElements[hash] = new Constant(key);
             }
         }
 
-        public void InsertConstant(string name, string key)
+        public void InsertIdentificator(string key)
         {
-            uint hash = Hash(key);
-            if (dynamicElements[hash] != null) dynamicElements[hash] = new Constant(name, key);
+            int hash = Hash(key);
+            if (dynamicElements[hash] != null) dynamicElements[hash] = new Identificator(key);
             else
             {
                 int i = 0;
@@ -70,22 +76,45 @@ namespace Translation_tables
                     hash = (hash + 1) % tableSize;
                     if (++i == tableSize) return;
                 }
-                dynamicElements[hash] = new Constant(name, key);
+                dynamicElements[hash] = new Identificator(key);
             }
         }
 
-        public bool Search(string key)
+        public void AddAttribute(string key, string? name = null, int? value = null, int? scope = null)
         {
-            uint hash = Hash(key);
-            if (dynamicElements[hash] == null) return false;
-            if (dynamicElements[hash].Key == key) return true;
+            int idx = Search(key);
+            if (idx == -1)
+            {
+                Console.WriteLine($"Element with {key} not found");
+                return;
+            }
+
+            if (dynamicElements[idx] is Constant constant)
+            {
+                constant.Value = value.Value;
+                dynamicElements[idx] = constant;
+            }
+
+            if (dynamicElements[idx] is Identificator identificator)
+            {
+                identificator.Name = name;
+                identificator.Scope = scope.Value;
+                dynamicElements[idx] = identificator;
+            }
+        }
+
+        public int Search(string key)
+        {
+            int hash = Hash(key);
+            if (dynamicElements[hash] == null) return -1;
+            if (dynamicElements[hash].Key == key) return hash;
 
             while (dynamicElements[hash].Key != key)
             {
                 hash = (hash + 1) % tableSize;
-                if (hash == tableSize && dynamicElements[hash] == null) return false;
+                if (hash == tableSize && dynamicElements[hash] == null) return -1;
             }
-            return true;
+            return hash;
         }
     }
 }
