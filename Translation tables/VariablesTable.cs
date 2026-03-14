@@ -9,29 +9,21 @@ namespace Translation_tables
 {
     interface IDynamicElement
     {
-        public string Key { get; set; }
+        public string Name { get; set; }
     }
 
-    struct Identificator(string key) : IDynamicElement
+    struct Lexeme(string name, int value, int scope): IDynamicElement
     {
-        public string? Name { get; set; }
-        public string Key { get; set; } = key;
-        public int Scope { get; set; }
+        public string Name { get; set;  } = name;
+        public int Value { get; set; } = value;
+        public int Scope { get; set; } = scope;
     }
 
-    struct Constant(string key) : IDynamicElement
+    struct Constant(string name, int value) : IDynamicElement
     {
-        public int Value { get; set; }
-        public string Key { get; set; } = key;
+        public string Name { get; set; } = name;
+        public int Value { get; set; } = value;
     }
-
-    //class DynamicElement(string key)
-    //{
-    //    public string Key { get; set; } = key;
-    //    public string? Name { get; set; }
-    //    public int Value { get; set; }
-    //    public int Scope { get; set; }
-    //}
 
     class VariablesTable
     {
@@ -48,10 +40,10 @@ namespace Translation_tables
             return Math.Abs(h % tableSize);
         }
 
-        public void InsertConstant(string key)
+        public void InsertConstant(string name, int value)
         {
-            int hash = Hash(key);
-            if (dynamicElements[hash] != null) dynamicElements[hash] = new Constant(key);
+            int hash = Hash(name);
+            if (dynamicElements[hash] != null) dynamicElements[hash] = new Constant(name, value);
             else
             {
                 int i = 0;
@@ -60,14 +52,14 @@ namespace Translation_tables
                     hash = (hash + 1) % tableSize;
                     if (++i == tableSize) return;
                 }
-                dynamicElements[hash] = new Constant(key);
+                dynamicElements[hash] = new Constant(name, value);
             }
         }
 
-        public void InsertIdentificator(string key)
+        public void InsertLexeme(string name, int value, int scope)
         {
-            int hash = Hash(key);
-            if (dynamicElements[hash] != null) dynamicElements[hash] = new Identificator(key);
+            int hash = Hash(name);
+            if (dynamicElements[hash] != null) dynamicElements[hash] = new Lexeme(name, value, scope);
             else
             {
                 int i = 0;
@@ -76,40 +68,17 @@ namespace Translation_tables
                     hash = (hash + 1) % tableSize;
                     if (++i == tableSize) return;
                 }
-                dynamicElements[hash] = new Identificator(key);
+                dynamicElements[hash] = new Lexeme(name, value, scope);
             }
-        }
-
-        public void AddAttribute(string key, string? name = null, int? value = null, int? scope = null)
-        {
-            int idx = Search(key);
-            if (idx == -1)
-            {
-                Console.WriteLine($"Element with {key} not found");
-                return;
-            }
-
-            if (dynamicElements[idx] is Constant constant)
-            {
-                constant.Value = value.Value;
-                dynamicElements[idx] = constant;
-            }
-
-            if (dynamicElements[idx] is Identificator identificator)
-            {
-                identificator.Name = name;
-                identificator.Scope = scope.Value;
-                dynamicElements[idx] = identificator;
-            }
-        }
+        }     
 
         public int Search(string key)
         {
             int hash = Hash(key);
             if (dynamicElements[hash] == null) return -1;
-            if (dynamicElements[hash].Key == key) return hash;
+            if (dynamicElements[hash].Name == key) return hash;
 
-            while (dynamicElements[hash].Key != key)
+            while (dynamicElements[hash].Name != key)
             {
                 hash = (hash + 1) % tableSize;
                 if (hash == tableSize && dynamicElements[hash] == null) return -1;
