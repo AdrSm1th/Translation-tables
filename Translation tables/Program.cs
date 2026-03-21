@@ -69,6 +69,10 @@ class Program
             Console.WriteLine("<3> - Find lexeme in dynamic table");
             Console.WriteLine("<4> - Exit");
 
+            Scanner scanner = new Scanner(permanentTable, variablesTable);
+            scanner.Scan("program.txt");
+            scanner.Output();
+
             choice = int.Parse(Console.ReadLine());
 
             switch (choice)
@@ -81,64 +85,22 @@ class Program
                     break;
 
                 case 2:
-                    Console.WriteLine("<1> - Insert constant");
-                    Console.WriteLine("<2> - Insert lexeme");
-                    choice = int.Parse(Console.ReadLine());
-
-                    if (choice < 1 || choice > 2)
+                    Console.WriteLine("Enter element name, value");
+                    string[] input = Console.ReadLine().Split(' ');
+                    if (input.Length != 2)
                     {
-                        Console.WriteLine("Unknown command!");
+                        Console.WriteLine("Invalid input: wrong number of parameters");
                         break;
                     }
+                    name = input[0];
+                    int value = 0;
 
-                    if (choice == 1)
+                    if (!int.TryParse(input[1], out value))
                     {
-                        Console.WriteLine("Enter element name, value");
-                        string[] input = Console.ReadLine().Split(' ');
-                        if (input.Length != 2)
-                        {
-                            Console.WriteLine("Invalid input");
-                            break;
-                        }
-                        name = input[0];
-                        int value = 0;
-
-                        if (!int.TryParse(input[1], out value))
-                        {
-                            Console.WriteLine("Invalid input");
-                            break;
-                        }
-
-                        variablesTable.InsertConstant(name, value);
+                        Console.WriteLine("Invalid input: value must be integer");
+                        break;
                     }
-
-                    if (choice == 2)
-                    {
-                        Console.WriteLine("Enter element name, value and scope");
-                        string[] input = Console.ReadLine().Split(' ');
-                        if (input.Length != 3)
-                        {
-                            Console.WriteLine("Invalid input");
-                            break;
-                        }
-                        name = input[0];
-                        int value = 0, scope = 0;
-
-                        
-                        if (!int.TryParse(input[1], out value))
-                        {
-                            Console.WriteLine("Invalid input");
-                            break;
-                        }
-
-                        if (!int.TryParse(input[2], out scope))
-                        {
-                            Console.WriteLine("Invalid input");
-                            break;
-                        }
-
-                        variablesTable.InsertLexeme(name, value, scope);
-                    }
+                    variablesTable.InsertLexeme(name, value);
                     break;
 
                 case 3:
@@ -151,18 +113,8 @@ class Program
                             Console.WriteLine("Element not found");
                             break;
                         }
-
-                        if (variablesTable.dynamicElements[idx] is Constant constant)
-                        {
-                            constant = (Constant)variablesTable.dynamicElements[idx];
-                            Console.WriteLine($"Value = {constant.Value}");
-                        }
-
-                        if (variablesTable.dynamicElements[idx] is Lexeme identificator)
-                        {
-                            identificator = (Lexeme)variablesTable.dynamicElements[idx];
-                            Console.WriteLine($"Name: {identificator.Name} Value: {identificator.Value} Scope: {identificator.Scope}");
-                        }
+                        Lexeme identificator = (Lexeme)variablesTable.dynamicElements[idx];
+                        Console.WriteLine($"Name: {identificator.Name} Value: {identificator.Value}");
                         break;
                     }
 
