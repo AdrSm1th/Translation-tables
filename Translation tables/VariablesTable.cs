@@ -7,10 +7,11 @@ using System.Threading.Tasks;
 
 namespace Translation_tables
 {
-    struct Lexeme(string name, int value)
+    struct Lexeme(string name, int value, bool constant)
     {
         public string Name { get; set;  } = name;
         public int Value { get; set; } = value;
+        public bool Const { get; set; } = constant;
     }
 
     class VariablesTable
@@ -28,10 +29,10 @@ namespace Translation_tables
             return Math.Abs(h % tableSize);
         }
 
-        public int InsertLexeme(string name, int value)
+        public int InsertLexeme(string name, int value, bool constant)
         {
             int hash = Hash(name);
-            if (dynamicElements[hash].Name == null) dynamicElements[hash] = new Lexeme(name, value);
+            if (dynamicElements[hash].Name == null) dynamicElements[hash] = new Lexeme(name, value, constant);
             else
             {
                 int i = 0;
@@ -40,7 +41,7 @@ namespace Translation_tables
                     hash = (hash + 1) % tableSize;
                     if (++i == tableSize) return hash;
                 }
-                dynamicElements[hash] = new Lexeme(name, value);
+                dynamicElements[hash] = new Lexeme(name, value, constant);
             }
             return hash;
         }     

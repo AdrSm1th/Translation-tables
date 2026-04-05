@@ -24,7 +24,7 @@ class Program
             Console.WriteLine("<4> - Exit");
 
             Scanner scanner = new Scanner(permanentTable, variablesTable);
-            scanner.Scan("program 2.txt");
+            scanner.Scan("program.txt");
             //scanner.Output();
 
             choice = int.Parse(Console.ReadLine());
@@ -54,7 +54,7 @@ class Program
                         Console.WriteLine("Invalid input: value must be integer");
                         break;
                     }
-                    variablesTable.InsertLexeme(name, value);
+                    //variablesTable.InsertLexeme(name, value);
                     break;
 
                 case 3:
