@@ -24,7 +24,7 @@ class Program
             Console.WriteLine("<4> - Exit");
 
             Scanner scanner = new Scanner(permanentTable, variablesTable);
-            scanner.Scan("program.txt");
+            scanner.Scan("program 2.txt");
             //scanner.Output();
 
             choice = int.Parse(Console.ReadLine());

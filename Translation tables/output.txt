@@ -1,14 +1,8 @@
-(0, 3) (0, 4) (1, 2) (1, 3) 
-(1, 6) 
-(0, 3) reserved word can't be identifier line: 3 position: 9 (2, 5) (4, 62) (1, 1) 
-(0, 3) (5, 10) (2, 5) (4, 62) (1, 0) (5, 187) (2, 5) (4, 62) (1, 1) 
-(0, 3) (5, 63) (1, 1) 
-(0, 3) Invalid name for identifier on line: 6 position 8 (1, 1) 
-(0, 1) (0, 3) (3, 106) (1, 1) 
-(0, 2) (1, 2) (0, 3) (5, 2) (2, 5) (4, 59) (1, 1) (5, 2) (2, 4) (4, 98) (1, 1) (5, 2) (2, 5) (5, 2) (2, 3) (4, 58) (1, 3) 
-(1, 6) 
-(5, 10) (2, 5) (5, 10) (2, 3) (4, 58) 
+(0, 3) (0, 4) (1, 3) (1, 4) 
 (1, 7) 
-(5, 10) (2, 5) (5, 10) (2, 0) (4, 98) (1, 1) 
-(5, 10) (2, 5) (5, 10) (2, 1) (5, 187) (1, 1) 
-(1, 7) 
+(0, 3) Line: 3, Position: 8. Invalid name for identifier.
+(0, 3) Line: 4, Position: 7. Identifier name can't start with number.
+(0, 3) Line: 5, Position: 9. reserved word can't be identifier.
+(0, 1) (0, 3) Line: 6, Position: 18. Invalid name for constant.
+(0, 3) (5, 10) (2, 5) (1, 2) (5, 9) (1, 2) (1, 1) 
+(1, 8) 
