@@ -4,52 +4,6 @@ using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
 using Translation_tables;
 
-struct Word
-{
-    public string name;
-    public string type;
-
-    public Word(string _name, string _type)
-    {
-        name = _name;
-        type = _type;
-    }
-}
-
-class PermanentTable
-{
-    public List<Word> DataStatic = [];
-
-    public PermanentTable()
-    {
-        string[] alphabet = File.ReadAllLines("alphabet.txt");
-        foreach (string letter in alphabet)
-        {
-            DataStatic.Add(new Word(letter, "letter"));
-        }
-
-        string[] words = File.ReadAllLines("reserved_words.txt");
-        foreach (string word in words)
-        {
-            DataStatic.Add(new Word(word, "word"));
-        }
-
-        string[] operators = File.ReadAllLines("operators.txt");
-        foreach (string oper in operators)
-        {
-            DataStatic.Add(new Word(oper, "operator"));
-        }
-
-        string[] separators = File.ReadAllLines("separators.txt");
-        foreach (string separator in separators)
-        {
-            DataStatic.Add(new Word(separator, "separator"));
-        }
-        
-        DataStatic.Sort((a, b) => a.name.CompareTo(b.name));
-    }
-}
-
 class Program
 {
     static void Main()
@@ -71,7 +25,7 @@ class Program
 
             Scanner scanner = new Scanner(permanentTable, variablesTable);
             scanner.Scan("program.txt");
-            scanner.Output();
+            //scanner.Output();
 
             choice = int.Parse(Console.ReadLine());
 
@@ -81,7 +35,7 @@ class Program
                     Console.WriteLine("Enter element name");
                     name = Console.ReadLine();
 
-                    Console.WriteLine(BinarySearch.Search(name, permanentTable.DataStatic));
+                    //Console.WriteLine(BinarySearch.Search(name, permanentTable.DataStatic));
                     break;
 
                 case 2:

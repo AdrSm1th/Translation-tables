@@ -15,7 +15,7 @@ namespace Translation_tables
 
     class VariablesTable
     {
-        private const int tableSize = 10000;
+        private const int tableSize = 200;
         public Lexeme[] dynamicElements = new Lexeme[tableSize];
 
         public int Hash(string key)
@@ -28,7 +28,7 @@ namespace Translation_tables
             return Math.Abs(h % tableSize);
         }
 
-        public void InsertLexeme(string name, int value)
+        public int InsertLexeme(string name, int value)
         {
             int hash = Hash(name);
             if (dynamicElements[hash].Name == null) dynamicElements[hash] = new Lexeme(name, value);
@@ -38,10 +38,11 @@ namespace Translation_tables
                 while (dynamicElements[hash].Name != null)
                 {
                     hash = (hash + 1) % tableSize;
-                    if (++i == tableSize) return;
+                    if (++i == tableSize) return hash;
                 }
                 dynamicElements[hash] = new Lexeme(name, value);
             }
+            return hash;
         }     
 
         public void ChangeLexeme(string name, int value)

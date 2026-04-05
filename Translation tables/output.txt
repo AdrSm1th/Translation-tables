@@ -1,51 +1,14 @@
-Type: KEYWORD Name: int
-Type: KEYWORD Name: main
-Type: SEPARATOR Name: (
-Type: SEPARATOR Name: )
-Type: SEPARATOR Name: {
-Type: KEYWORD Name: int
-Type: IDENTIFIER Name: a
-Type: OPERATOR Name: =
-Type: CONSTANT Name: 5
-Type: SEPARATOR Name: ,
-Type: IDENTIFIER Name: x
-Type: OPERATOR Name: =
-Type: CONSTANT Name: 5
-Type: SEPARATOR Name: ;
-Type: KEYWORD Name: for
-Type: SEPARATOR Name: (
-Type: KEYWORD Name: int
-Type: IDENTIFIER Name: i
-Type: OPERATOR Name: =
-Type: CONSTANT Name: 0
-Type: SEPARATOR Name: ;
-Type: IDENTIFIER Name: i
-Type: OPERATOR Name: <
-Type: CONSTANT Name: 10
-Type: SEPARATOR Name: ;
-Type: IDENTIFIER Name: i
-Type: OPERATOR Name: =
-Type: IDENTIFIER Name: i
-Type: OPERATOR Name: +
-Type: CONSTANT Name: 1
-Type: SEPARATOR Name: )
-Type: SEPARATOR Name: {
-Type: IDENTIFIER Name: a
-Type: OPERATOR Name: =
-Type: IDENTIFIER Name: a
-Type: OPERATOR Name: +
-Type: CONSTANT Name: 1
-Type: SEPARATOR Name: }
-Type: IDENTIFIER Name: a
-Type: OPERATOR Name: =
-Type: IDENTIFIER Name: a
-Type: OPERATOR Name: -
-Type: CONSTANT Name: 10
-Type: SEPARATOR Name: ;
-Type: IDENTIFIER Name: a
-Type: OPERATOR Name: =
-Type: IDENTIFIER Name: a
-Type: OPERATOR Name: *
-Type: IDENTIFIER Name: x
-Type: SEPARATOR Name: ;
-Type: SEPARATOR Name: }
+(0, 3) (0, 4) (1, 2) (1, 3) 
+(1, 6) 
+(0, 3) reserved word can't be identifier line: 3 position: 9 (2, 5) (4, 62) (1, 1) 
+(0, 3) (5, 10) (2, 5) (4, 62) (1, 0) (5, 187) (2, 5) (4, 62) (1, 1) 
+(0, 3) (5, 63) (1, 1) 
+(0, 3) Invalid name for identifier on line: 6 position 8 (1, 1) 
+(0, 1) (0, 3) (3, 106) (1, 1) 
+(0, 2) (1, 2) (0, 3) (5, 2) (2, 5) (4, 59) (1, 1) (5, 2) (2, 4) (4, 98) (1, 1) (5, 2) (2, 5) (5, 2) (2, 3) (4, 58) (1, 3) 
+(1, 6) 
+(5, 10) (2, 5) (5, 10) (2, 3) (4, 58) 
+(1, 7) 
+(5, 10) (2, 5) (5, 10) (2, 0) (4, 98) (1, 1) 
+(5, 10) (2, 5) (5, 10) (2, 1) (5, 187) (1, 1) 
+(1, 7) 

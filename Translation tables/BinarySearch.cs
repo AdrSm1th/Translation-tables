@@ -8,7 +8,7 @@ namespace Translation_tables
 {
     static class BinarySearch
     {
-        public static Word Search(string elem, List<Word> buff)
+        public static int Search(string elem, List<Word> buff)
         {
             int low = 0, high = buff.Count - 1, middle = 0;
             while (low <= high)
@@ -25,10 +25,10 @@ namespace Translation_tables
                 }
                 else
                 {
-                    return buff[middle];
+                    return middle;
                 }
             }
-            return new Word();
+            return -1;
         }
     }
 }

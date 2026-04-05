@@ -1,5 +1,5 @@
-main
-for
-if
-int
 break
+const
+for
+int
+main
