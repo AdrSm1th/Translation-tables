@@ -30,7 +30,26 @@ namespace Translation_tables
 
     class SyntacticScanner
     {
-        public int ParsingTable(Nonterminal nt, Token token)
+        private Stack<object> stack = new Stack<object>();
+        private List<Token> inputTokens;
+        private int currentTokenIndex = 0;
+
+        public SyntacticScanner(List<Token> tokens)
+        {
+            inputTokens = tokens;
+            stack.Push('$');
+            stack.Push(Nonterminal.Program);
+        }
+
+        private Token CurrentToken()
+        {
+            if (currentTokenIndex < inputTokens.Count)
+                return inputTokens[currentTokenIndex];
+            else
+                return new Token(-1, -1);
+        }
+
+        private int ParsingTable(Nonterminal nt, Token token)
         {
             int tokenType = token.GetTokenType();
             int tokenId = token.GetId();
@@ -145,6 +164,226 @@ namespace Translation_tables
                 default:
                     {
                         return -1;
+                    }
+            }
+        }
+
+        private void Rules(int ruleId)
+        {
+            switch (ruleId)
+            {
+                case 0:
+                    {
+                        stack.Push(Nonterminal.Function);
+                        break;
+                    }
+
+                case 1:
+                    {
+                        stack.Push(new Token(0, 3));
+                        stack.Push(new Token(0, 4));
+                        stack.Push(new Token(1, 3));
+                        stack.Push(new Token(1, 4));
+                        stack.Push(Nonterminal.Block);
+                        break;
+                    }
+
+                case 2:
+                    {
+                        stack.Push(Nonterminal.Statement);
+                        stack.Push(Nonterminal.StatementList);
+                        break;
+                    }
+
+                case 3:
+                    {
+                        stack.Push("eps");
+                        break;
+                    }
+
+                case 4:
+                    {
+                        stack.Push(Nonterminal.Declaration);
+                        break;
+                    }
+
+                case 5:
+                    {
+                        stack.Push(Nonterminal.Assignment);
+                        break;
+                    }
+
+                case 6:
+                    {
+                        stack.Push(Nonterminal.ForStatement);
+                        break;
+                    }
+
+                case 7:
+                    {
+                        stack.Push(Nonterminal.Block);
+                        break;
+                    }
+
+                case 8:
+                    {
+                        stack.Push(new Token(0, 3));
+                        stack.Push(new Token(5, 0));
+                        break;
+                    }
+
+                case 9:
+                    {
+                        stack.Push(new Token(5, 0));
+                        stack.Push(new Token(2, 4));
+                        stack.Push(Nonterminal.Expr);
+                        break;
+                    }
+
+                case 10:
+                    {
+                        stack.Push(new Token(0, 2));
+                        stack.Push(new Token(1, 3));
+                        stack.Push(Nonterminal.OptExpr);
+                        stack.Push(new Token(1, 1));
+                        stack.Push(Nonterminal.OptExpr);
+                        stack.Push(new Token(1, 1));
+                        stack.Push(Nonterminal.OptExpr);
+                        stack.Push(new Token(1, 4));
+                        stack.Push(Nonterminal.Statement);
+                        break;
+                    }
+
+                case 11:
+                    {
+                        stack.Push(new Token(1, 7));
+                        stack.Push(Nonterminal.Block);
+                        stack.Push(new Token(1, 8));
+                        break;
+                    }
+
+                case 12:
+                    {
+                        stack.Push(Nonterminal.Expr);
+                        break;
+                    }
+
+                case 13:
+                    {
+                        stack.Push("eps");
+                        break;
+                    }
+
+                case 14:
+                    {
+                        stack.Push(Nonterminal.AndExpr);
+                        stack.Push(Nonterminal.OrRest);
+                        break;
+                    }
+
+                case 15:
+                    {
+                        stack.Push(new Token(2, 5));
+                        stack.Push(Nonterminal.AndExpr);
+                        stack.Push(Nonterminal.OrRest);
+                        break;
+                    }
+
+                case 16:
+                    {
+                        stack.Push("eps");
+                        break;
+                    }
+
+                case 17:
+                    {
+                        stack.Push(Nonterminal.AddExpr);
+                        stack.Push(Nonterminal.AndRest);
+                        break;
+                    }
+
+                case 18:
+                    {
+                        stack.Push(new Token(2, 2));
+                        stack.Push(Nonterminal.AddExpr);
+                        stack.Push(Nonterminal.AndRest);
+                        break;
+                    }
+
+                case 19:
+                    {
+                        stack.Push("eps");
+                        break;
+                    }
+
+                case 20:
+                    {
+                        stack.Push(Nonterminal.MulExpr);
+                        stack.Push(Nonterminal.AddRest);
+                        break;
+                    }
+
+                case 21:
+                    {
+                        stack.Push(new Token(2, 3));
+                        stack.Push(Nonterminal.MulExpr);
+                        stack.Push(Nonterminal.AddRest);
+                        break;
+                    }
+
+                case 22:
+                    {
+                        stack.Push(new Token(2, 0));
+                        stack.Push(Nonterminal.MulExpr);
+                        stack.Push(Nonterminal.AddRest);
+                        break;
+                    }
+
+                case 23:
+                    {
+                        stack.Push("eps");
+                        break;
+                    }
+
+                case 24:
+                    {
+                        stack.Push(Nonterminal.Primary);
+                        stack.Push(Nonterminal.MulRest);
+                        break;
+                    }
+
+                case 25:
+                    {
+                        stack.Push(new Token(2, 1));
+                        stack.Push(Nonterminal.Primary);
+                        stack.Push(Nonterminal.MulRest);
+                        break;
+                    }
+
+                case 26:
+                    {
+                        stack.Push("eps");
+                        break;
+                    }
+
+                case 27:
+                    {
+                        stack.Push(new Token(5, 0));
+                        break;
+                    }
+
+                case 28:
+                    {
+                        stack.Push(new Token(4, 0));
+                        break;
+                    }
+
+                case 29:
+                    {
+                        stack.Push(new Token(1, 3));
+                        stack.Push(Nonterminal.Expr);
+                        stack.Push(new Token(1, 4));
+                        break;
                     }
             }
         }
