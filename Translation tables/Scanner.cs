@@ -29,7 +29,7 @@ namespace Translation_tables
         //1 - Seporator
         //2 - Operator
         //3 - Named constant
-        //4 - constant
+        //4 - Сonstant
         //5 - Identifier
 
         private int Id = id;
