@@ -168,9 +168,9 @@ namespace Translation_tables
 
                         if (match)
                         {
-                            Token actualToken = currentToken;  // сохранить, потому что Coincidence сдвинет индекс
+                            Token actualToken = currentToken;
                             Coincidence();
-                            ProcessTerminal(actualToken);      // передаём реальный токен
+                            ProcessTerminal(actualToken);
                         }
                         else
                         {
@@ -203,7 +203,7 @@ namespace Translation_tables
 
             string output = "";
 
-            output += "\nПостфиксная запись:\n" + string.Join(" ", postfixOutput);
+            output += string.Join(" ", postfixOutput);
             File.WriteAllText("output_syntax.txt", output);
 
             if (errors.Count == 0)
