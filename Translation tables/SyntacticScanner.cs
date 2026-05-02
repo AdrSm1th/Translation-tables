@@ -30,6 +30,12 @@ namespace Translation_tables
         DeclRest
     }
 
+    struct SymbolInfo
+    {
+        public bool typeDefined;
+        public bool valueDefined;
+    }
+
     class SyntacticScanner
     {
         private Stack<object> stack = new Stack<object>();
@@ -37,13 +43,19 @@ namespace Translation_tables
         private int currentTokenIndex = 0;
         private List<string> errors = new List<string>();
         private PermanentTable permanentTable;
+        private VariablesTable variablesTable;
 
-        public SyntacticScanner(List<Token> tokens, PermanentTable permTable)
+        private Stack<Token> operatorStack = new Stack<Token>();
+        private List<string> postfixOutput = new List<string>();
+        private Dictionary<string, SymbolInfo> symbolTable = new Dictionary<string, SymbolInfo>();
+
+        public SyntacticScanner(List<Token> tokens, PermanentTable permTable, VariablesTable variablesTable)
         {
             inputTokens = tokens;
             stack.Push(new Token(-1, 0));
             stack.Push(Nonterminal.Program);
             permanentTable = permTable;
+            this.variablesTable = variablesTable;
         }
 
         private Token GetCurrentToken()
@@ -137,6 +149,7 @@ namespace Translation_tables
                         if (currentTokenType == token.GetTokenType() && currentToken.GetId() == token.GetId())
                         {
                             Coincidence();
+                            ProcessTerminal(token);
                         }
                         else
                         {
@@ -153,7 +166,12 @@ namespace Translation_tables
                         else if ((token.GetTokenType() == 3 || token.GetTokenType() == 4) &&
                                  (currentTokenType == 3 || currentTokenType == 4)) match = true;
 
-                        if (match) Coincidence();
+                        if (match)
+                        {
+                            Token actualToken = currentToken;  // сохранить, потому что Coincidence сдвинет индекс
+                            Coincidence();
+                            ProcessTerminal(actualToken);      // передаём реальный токен
+                        }
                         else
                         {
                             string exp = GetTokenTypeName(token.GetTokenType(), token.GetId());
@@ -183,17 +201,23 @@ namespace Translation_tables
                 else if (element is string s && s == "eps") { stack.Pop(); continue; }
             }
 
+            string output = "";
+
+            output += "\nПостфиксная запись:\n" + string.Join(" ", postfixOutput);
+            File.WriteAllText("output_syntax.txt", output);
+
             if (errors.Count == 0)
-                File.WriteAllText("output_syntax.txt", "Разбор завершён успешно, ошибок нет.");
+                File.WriteAllText("output_error.txt", "Разбор завершён успешно, ошибок нет.");
 
             else
             {
                 string result = "";
                 foreach (string err in errors)
                     result += err + Environment.NewLine;
-                File.WriteAllText("output_syntax.txt", result);
+                File.WriteAllText("output_error.txt", result);
             }
             return true;
+
         }
 
         public int ParsingTable(Nonterminal nt, Token token)
@@ -569,6 +593,101 @@ namespace Translation_tables
                         stack.Push(new Token(2, 4));
                         break;
                     }
+            }
+        }
+        private int GetPriority(Token t)
+        {
+            if (t.GetTokenType() == 1)
+            {
+                if (t.GetId() == 3 || t.GetId() == 4) return 0;
+                if (t.GetId() == 1) return -1;
+                if (t.GetId() == 8) return -2;
+            }
+            if (t.GetTokenType() == 2)
+            {
+                switch (t.GetId())
+                {
+                    case 4: return 1;   // =
+                    case 5: return 3;   // ||
+                    case 2: return 4;   // &&
+                    case 3: return 7;   // +
+                    case 0: return 7;   // -
+                    case 1: return 8;   // *
+                }
+            }
+            return -1;
+        }
+
+        private void ProcessOperator(Token op)
+        {
+            int prio = GetPriority(op);
+            while (operatorStack.Count > 0)
+            {
+                Token top = operatorStack.Peek();
+                int topPrio = GetPriority(top);
+                if (topPrio >= prio && topPrio != 0)
+                {
+                    postfixOutput.Add(GetTokenTypeName(top.GetTokenType(), top.GetId()));
+                    operatorStack.Pop();
+                }
+                else break;
+            }
+            operatorStack.Push(op);
+        }
+
+        private void ProcessLeftParen(Token paren)
+        {
+            operatorStack.Push(paren);
+        }
+
+        private void ProcessRightParen()
+        {
+            while (operatorStack.Count > 0)
+            {
+                Token top = operatorStack.Peek();
+                if (top.GetTokenType() == 1 && top.GetId() == 3)
+                {
+                    operatorStack.Pop();
+                    break;
+                }
+                postfixOutput.Add(GetTokenTypeName(top.GetTokenType(), top.GetId()));
+                operatorStack.Pop();
+            }
+        }
+
+        private void ProcessTerminal(Token t)
+        {
+            int type = t.GetTokenType();
+            int id = t.GetId();
+
+            if (type == 3 || type == 5)
+            {
+                postfixOutput.Add(variablesTable.dynamicElements[id].Name);
+            }
+            else if (type == 4)
+            {
+                postfixOutput.Add(variablesTable.dynamicElements[id].Value.ToString());
+            }
+            else if (type == 2)
+            {
+                ProcessOperator(t);
+            }
+            else if (type == 1)
+            {
+                if (id == 3)
+                    ProcessLeftParen(t);
+                else if (id == 4)
+                    ProcessRightParen();
+                else if (id == 1 || id == 8)
+                {
+                    while (operatorStack.Count > 0)
+                    {
+                        Token top = operatorStack.Pop();
+                        if (top.GetTokenType() == 1 && top.GetId() == 3) continue;
+                        postfixOutput.Add(GetTokenTypeName(top.GetTokenType(), top.GetId()));
+                    }
+                    if (id == 1) postfixOutput.Add(";");
+                }
             }
         }
     }
