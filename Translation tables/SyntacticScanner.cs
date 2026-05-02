@@ -547,7 +547,7 @@ namespace Translation_tables
                             Error("Invalid expression");
                         }
 
-                        string postfixStr = string.Join(" ", postfix.Select(t => GetTokenString(t)));
+                        string postfixStr = string.Join(" ", postfix.Where(t => !(t.GetTokenType() == 1 && (t.GetId() == 3 || t.GetId() == 4))).Select(t => GetTokenString(t)));
 
                         File.AppendAllText("output_syntax.txt", $"Postfix for assignment: {postfixStr}\n");
 
@@ -731,9 +731,9 @@ namespace Translation_tables
                             }
                             else
                             {
-                                string postfixStr = string.Join(" ", postfix.Select(t => GetTokenString(t)));
+                                string postfixStr = string.Join(" ", postfix.Where(t => !(t.GetTokenType() == 1 && (t.GetId() == 3 || t.GetId() == 4))).Select(t => GetTokenString(t)));
                                 File.AppendAllText("output_syntax.txt", $"Postfix for initialization: {postfixStr}\n");
-                                Console.WriteLine(postfixStr);
+                                //Console.WriteLine(postfixStr);
                             }
                         }
 
