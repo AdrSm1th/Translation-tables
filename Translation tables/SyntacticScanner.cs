@@ -69,6 +69,45 @@ namespace Translation_tables
             currentTokenIndex++;
         }
 
+        private VariablesTable variablesTable;
+
+        public SyntacticScanner(List<Token> tokens, PermanentTable permTable, VariablesTable varTable)
+        {
+            inputTokens = tokens;
+            stack.Push(new Token(-1, 0));
+            stack.Push(Nonterminal.Program);
+            permanentTable = permTable;
+            variablesTable = varTable;
+        }
+
+        private string GetTokenString(Token token)
+        {
+            int type = token.GetTokenType();
+            int id = token.GetId();
+
+            switch (type)
+            {
+                case 0:
+                    return permanentTable.Words[id].name;
+                case 1:
+                    return permanentTable.Separators[id].name;
+                case 2:
+                    return permanentTable.Operators[id].name;
+                case 3:
+                case 4:
+                    if (id >= 0 && id < variablesTable.dynamicElements.Length && variablesTable.dynamicElements[id].Name != null)
+                        return variablesTable.dynamicElements[id].Value.ToString();
+                    else
+                        return "constant";
+                case 5:
+                    if (id >= 0 && id < variablesTable.dynamicElements.Length && variablesTable.dynamicElements[id].Name != null)
+                        return variablesTable.dynamicElements[id].Name;
+                    else
+                        return "identifier";
+                default:
+                    return "";
+            }
+        }
         private bool Error(string errorText)
         {
             errors.Add($"[Syntax ERROR] Token index {currentTokenIndex}: {errorText}");
@@ -187,7 +226,7 @@ namespace Translation_tables
         }
         public bool Scan()
         {
-            File.WriteAllText("output_syntax.txt");
+            File.WriteAllText("output_syntax.txt", "");
             while (stack.Count > 0)
             {
                 Token currentToken = GetCurrentToken();
@@ -508,7 +547,7 @@ namespace Translation_tables
                             Error("Invalid expression");
                         }
 
-                        string postfixStr = string.Join(" ", postfix.Select(t => GetTokenTypeName(t.GetTokenType(), t.GetId())));
+                        string postfixStr = string.Join(" ", postfix.Select(t => GetTokenString(t)));
 
                         File.AppendAllText("output_syntax.txt", $"Postfix for assignment: {postfixStr}\n");
 
@@ -674,6 +713,30 @@ namespace Translation_tables
 
                 case 31:
                     {
+                        List<Token> exprTokens = new List<Token>();
+                        int i = currentTokenIndex + 1; 
+                                                       
+                        while (i < inputTokens.Count && !(inputTokens[i].GetTokenType() == 1 && inputTokens[i].GetId() == 1))
+                        {
+                            exprTokens.Add(inputTokens[i]);
+                            i++;
+                        }
+
+                        if (exprTokens.Count > 0)
+                        {
+                            var postfix = ToPostfix(exprTokens);
+                            if (!ValidatePostfix(postfix))
+                            {
+                                Error("Invalid expression in initialization");
+                            }
+                            else
+                            {
+                                string postfixStr = string.Join(" ", postfix.Select(t => GetTokenString(t)));
+                                File.AppendAllText("output_syntax.txt", $"Postfix for initialization: {postfixStr}\n");
+                                Console.WriteLine(postfixStr);
+                            }
+                        }
+
                         stack.Push(new Token(1, 1));
                         stack.Push(Nonterminal.Expr);
                         stack.Push(new Token(2, 4));
