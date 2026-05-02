@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel.Design;
-using System.Data;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,67 +9,45 @@ namespace Translation_tables
 {
     public enum State
     {
-        START,
-        IDENTIFIER,
-        CONSTANT,
-        OPERATOR,
-        EQUATION,
-        SEPARATOR,
-        COMMENT,
-        BLOCKCOMMENT,
-        NAMED_CONSTANT,
-        ERROR
+        START, IDENTIFIER, CONSTANT, OPERATOR, EQUATION, SEPARATOR, COMMENT, BLOCKCOMMENT, NAMED_CONSTANT, ERROR
     }
 
-    struct Token(int type, int id)
+    struct Token
     {
-        private int Type = type;
-        //0 - Keyword
-        //1 - Seporator
-        //2 - Operator
-        //3 - Named constant
-        //4 - Сonstant
-        //5 - Identifier
+        private int Type; //0 - Keyword //1 - Separator //2 - Operator //3 - Named constant //4 - Constant //5 - Identifier
+        private int Id;
 
-        private int Id = id;
-
-        public int GetId()
+        public Token(int type, int id)
         {
-            return Id;
+            Type = type;
+            Id = id;
         }
 
-        public int GetTokenType()
-        {
-            return Type;
-        }
-
-        public string GetToken()
-        {
-            return $"({Type.ToString()}, {Id}) ";
-        }
+        public int GetId() { return Id; }
+        public int GetTokenType() { return Type; }
+        public string GetToken() { return $"({Type.ToString()}, {Id}) "; }
     }
 
-    class Scanner(PermanentTable permanentTable, VariablesTable variablesTable)
+    class Scanner
     {
         private State CurrentState { get; set; } = State.START;
-        private PermanentTable PermanentTable { get; set; } = permanentTable;
-        private VariablesTable VariablesTable { get; set; } = variablesTable;
-        private string Buffer { get; set; }
-
+        private PermanentTable PermanentTable { get; set; }
+        private VariablesTable VariablesTable { get; set; }
+        private string Buffer { get; set; } = "";
         private List<Token> Tokens = new List<Token>();
-
         private bool initialize = false;
-
         private int position = 0;
-
         private string output = string.Empty;
         private int Line { get; set; } = 1;
         private int Pos { get; set; }
 
-        public List<Token> GetTokens()
+        public Scanner(PermanentTable permanentTable, VariablesTable variablesTable)
         {
-            return Tokens;
+            PermanentTable = permanentTable;
+            VariablesTable = variablesTable;
         }
+
+        public List<Token> GetTokens() { return Tokens; }
 
         public void Scan(string filename)
         {
@@ -85,13 +62,16 @@ namespace Translation_tables
                 char ch = input[position];
                 int id = 0;
                 Word elem = new Word();
+
                 id = BinarySearch.Search(ch.ToString(), PermanentTable.Alphabet);
                 if (id != -1) elem = PermanentTable.Alphabet[id];
+
                 if (id == -1)
                 {
                     id = BinarySearch.Search(ch.ToString(), PermanentTable.Operators);
                     if (id != -1) elem = PermanentTable.Operators[id];
                 }
+
                 if (id == -1)
                 {
                     id = BinarySearch.Search(ch.ToString(), PermanentTable.Separators);
@@ -114,33 +94,53 @@ namespace Translation_tables
                                         CurrentState = State.OPERATOR;
                                         break;
                                     case "separator":
-                                        if (elem.name == "/") CurrentState = State.COMMENT;
-                                        else CurrentState = State.SEPARATOR;
+                                        if (elem.name == "/")
+                                        {
+                                            if (position + 1 < input.Length && input[position + 1] == '/')
+                                            {
+                                                position++;
+                                                CurrentState = State.COMMENT;
+                                                Buffer = "";
+                                                break;
+                                            }
+                                            else if (position + 1 < input.Length && input[position + 1] == '*')
+                                            {
+                                                position++;
+                                                CurrentState = State.BLOCKCOMMENT;
+                                                Buffer = "/*";
+                                                break;
+                                            }
+                                            else
+                                            {
+                                                CurrentState = State.OPERATOR;
+                                            }
+                                        }
                                         break;
                                 }
                                 Buffer += ch;
                             }
-
                             else if (ch == ' ' || ch == '\r' || ch == '\t')
                             {
                                 continue;
                             }
-
                             else if (ch == '\n')
                             {
                                 output += "\n";
                                 Line++;
                                 Pos = 0;
                             }
-
                             else if (int.TryParse(ch.ToString(), out value))
                             {
                                 CurrentState = State.CONSTANT;
                                 Buffer += value.ToString();
                             }
-
+                            else if (ch == '\'')
+                            {
+                                Buffer = "'";
+                                CurrentState = State.CONSTANT;
+                            }
                             else
-                                Console.WriteLine("Unknown symbol on position: ", position);
+                                Console.WriteLine($"Unknown symbol '{ch}' at position {position}");
                         }
                         break;
 
@@ -151,52 +151,54 @@ namespace Translation_tables
                                 int wordId = BinarySearch.Search(Buffer, PermanentTable.Words);
                                 if (wordId != -1)
                                 {
-                                    if (PermanentTable.Words[wordId].name != "main" && initialize)
+                                    if (initialize && PermanentTable.Words[wordId].name != "main")
                                     {
                                         Error("reserved word can't be identifier");
                                         break;
                                     }
-                                    else
+                                    Tokens.Add(new Token(0, wordId));
+                                    output += Tokens[curTokenId++].GetToken();
+                                    if (PermanentTable.Words[wordId].name == "const")
                                     {
-                                        Tokens.Add(new Token(0, wordId));
-                                        output += Tokens[curTokenId++].GetToken();
-                                        if (PermanentTable.Words[wordId].name == "const")
-                                        {
-                                            CurrentState = State.NAMED_CONSTANT;
-                                            Buffer = "";
-                                            break;
-                                        }
-                                        if (PermanentTable.Words[wordId].name == "int")
-                                        {
-                                            CurrentState = State.START;
-                                            initialize = true;
-                                            Buffer = "";
-                                            break;
-                                        }
+                                        CurrentState = State.NAMED_CONSTANT;
+                                        Buffer = "";
+                                        break;
+                                    }
+                                    if (PermanentTable.Words[wordId].name == "int")
+                                    {
+                                        initialize = true;
                                     }
                                 }
                                 else
                                 {
-                                    int val = 0;
-                                    bool flag = true;
-                                    foreach (char letter in Buffer)
+                                    if (!char.IsLetter(Buffer[0]))
                                     {
-                                        if (BinarySearch.Search(letter.ToString(), PermanentTable.Alphabet) == -1 && !int.TryParse(letter.ToString(), out val))
-                                        {
-                                            flag = false;
-                                        }
-                                    }
-                                    if (!flag)
-                                    {
-                                        Error("Invalid name for identifier");
+                                        Error("Identifier must start with letter");
                                         break;
                                     }
-
-                                    int hash = VariablesTable.Search(Buffer);
-                                    if (hash == -1)
+                                    bool valid = true;
+                                    if (!char.IsLetter(Buffer[0])) valid = false;
+                                    foreach (char c in Buffer)
                                     {
-                                        hash = VariablesTable.InsertLexeme(Buffer, 0, false);
+                                        if (!char.IsLetterOrDigit(c) && c != '_')
+                                        {
+                                            valid = false;
+                                            break;
+                                        }
                                     }
+                                    if (!valid)
+                                    {
+                                        Error("Invalid identifier");
+                                        break;
+                                    }
+                                    int hash = VariablesTable.Search(Buffer);
+                                    if (initialize && hash != -1)
+                                    {
+                                        Error("Variable already declared");
+                                        break;
+                                    }
+                                    if (hash == -1)
+                                        hash = VariablesTable.InsertLexeme(Buffer, 0, false);
                                     Tokens.Add(new Token(5, hash));
                                     output += Tokens[curTokenId++].GetToken();
                                 }
@@ -215,26 +217,26 @@ namespace Translation_tables
 
                     case State.OPERATOR:
                         {
-                            int value = 0;
-                            if (Buffer == "=")
+                            string two = Buffer + ch;
+                            int opId = BinarySearch.Search(two, PermanentTable.Operators);
+                            if (opId != -1)
                             {
-                                CurrentState = State.EQUATION;
-                                Tokens.Add(new Token(2, BinarySearch.Search("=", PermanentTable.Operators)));
-                                output += Tokens[curTokenId++].GetToken();
-                                Buffer = "";
-                                if (ch != ' ') position--;
-                                break;
-                            }
-                            if (ch == ' ' || int.TryParse(ch.ToString(), out value))
-                            {
-                                Tokens.Add(new Token(2, BinarySearch.Search(Buffer, PermanentTable.Operators)));
+                                Tokens.Add(new Token(2, opId));
                                 output += Tokens[curTokenId++].GetToken();
                                 Buffer = "";
                                 CurrentState = State.START;
-                                position--;
-                                Pos--;
+                                break;
                             }
-                            else Buffer += ch;
+                            opId = BinarySearch.Search(Buffer, PermanentTable.Operators);
+                            if (opId != -1)
+                            {
+                                Tokens.Add(new Token(2, opId));
+                                output += Tokens[curTokenId++].GetToken();
+                            }
+                            Buffer = "";
+                            CurrentState = State.START;
+                            position--;
+                            Pos--;
                         }
                         break;
 
@@ -260,28 +262,23 @@ namespace Translation_tables
                                         Tokens.Add(new Token(4, hash));
                                         output += Tokens[curTokenId++].GetToken();
                                     }
-
                                     else if (hash != -1)
                                     {
-                                        if (VariablesTable.dynamicElements[hash].Const == true)
+                                        if (VariablesTable.dynamicElements[hash].Const)
                                         {
                                             Tokens.Add(new Token(3, hash));
-                                            output += Tokens[curTokenId++].GetToken();
                                         }
-                                        else if (VariablesTable.dynamicElements[hash].Const == false)
+                                        else
                                         {
                                             Tokens.Add(new Token(5, hash));
-                                            output += Tokens[curTokenId++].GetToken();
                                         }
-
+                                        output += Tokens[curTokenId++].GetToken();
                                     }
-
                                     else if (BinarySearch.Search(part, PermanentTable.Operators) != -1)
                                     {
                                         Tokens.Add(new Token(2, BinarySearch.Search(part, PermanentTable.Operators)));
                                         output += Tokens[curTokenId++].GetToken();
                                     }
-
                                     else
                                     {
                                         Error("Type missmatch");
@@ -314,7 +311,7 @@ namespace Translation_tables
                             int value = 0;
                             if (initialize)
                             {
-                                while (input[position] != ' ' && input[position] != ';')
+                                while (position < input.Length && input[position] != ' ' && input[position] != ';' && input[position] != '\n')
                                 {
                                     Buffer += input[position].ToString();
                                     position++;
@@ -371,7 +368,7 @@ namespace Translation_tables
                     case State.BLOCKCOMMENT:
                         {
                             int bufferSize = Buffer.Length;
-                            if (Buffer[bufferSize - 2].ToString() + Buffer[bufferSize - 1].ToString() == "*/")
+                            if (bufferSize >= 2 && Buffer[bufferSize - 2].ToString() + Buffer[bufferSize - 1].ToString() == "*/")
                             {
                                 CurrentState = State.START;
                                 Buffer = "";
@@ -387,7 +384,8 @@ namespace Translation_tables
 
                     case State.NAMED_CONSTANT:
                         {
-                            if (ch != ';') Buffer += ch.ToString();
+                            if (ch != ';')
+                                Buffer += ch.ToString();
                             else
                             {
                                 CurrentState = State.START;
@@ -395,7 +393,6 @@ namespace Translation_tables
                                 Buffer = "";
                                 Tokens.Add(new Token(0, BinarySearch.Search(parts[0], PermanentTable.Words)));
                                 output += Tokens[curTokenId++].GetToken();
-
                                 bool flag = true;
                                 foreach (char letter in parts[1])
                                 {
@@ -412,7 +409,6 @@ namespace Translation_tables
                                     Error("Invalid name for constant");
                                     break;
                                 }
-
                                 int hash = VariablesTable.InsertLexeme(parts[1], int.Parse(parts[3]), true);
                                 Tokens.Add(new Token(3, hash));
                                 output += Tokens[curTokenId++].GetToken();
@@ -424,24 +420,29 @@ namespace Translation_tables
 
                     case State.ERROR:
                         {
-                            if (ch != ';')
+                            if (ch == ';' || ch == '\n')
                             {
-                                continue;
+                                CurrentState = State.START;
+                                Buffer = "";
                             }
-                            Buffer = "";
-                            CurrentState = State.START;
                         }
                         break;
                 }
             }
+
+            if (CurrentState == State.BLOCKCOMMENT)
+            {
+                output += $"\n[ERROR] Line: {Line}, Pos: {Pos} -> Unclosed block comment\n";
+            }
+
             File.WriteAllText("output.txt", output);
         }
 
         private void Error(string message)
         {
+            output += $"\n[ERROR] Line: {Line}, Pos: {Pos}, Token: '{Buffer}' -> {message}\n";
+            Buffer = "";
             initialize = false;
-            position--;
-            output += $"Line: {Line}, Position: {Pos}, Word {Buffer}. {message}.";
             CurrentState = State.ERROR;
         }
     }

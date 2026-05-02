@@ -1,4 +1,5 @@
-﻿using System;
+﻿using System.IO;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security;
@@ -37,7 +38,17 @@ namespace Translation_tables
         private int currentTokenIndex = 0;
         private List<string> errors = new List<string>();
         private PermanentTable permanentTable;
-
+        private int GetPriority(string op)
+        {
+            return op switch
+            {
+                "||" => 1,
+                "&&" => 2,
+                "+" or "-" => 3,
+                "*" => 4,
+                _ => 0
+            };
+        }
         public SyntacticScanner(List<Token> tokens, PermanentTable permTable)
         {
             inputTokens = tokens;
@@ -60,7 +71,7 @@ namespace Translation_tables
 
         private bool Error(string errorText)
         {
-            errors.Add(errorText);
+            errors.Add($"[Syntax ERROR] Token index {currentTokenIndex}: {errorText}");
 
             while (currentTokenIndex < inputTokens.Count)
             {
@@ -107,6 +118,73 @@ namespace Translation_tables
             }
         }
 
+        private List<Token> ToPostfix(List<Token> infix)
+        {
+            Stack<Token> stack = new Stack<Token>();
+            List<Token> output = new List<Token>();
+
+            foreach (var token in infix)
+            {
+                int type = token.GetTokenType();
+
+                if (type == 5 || type == 3 || type == 4)
+                {
+                    output.Add(token);
+                }
+                else if (type == 2)
+                {
+                    string op = GetTokenTypeName(token.GetTokenType(), token.GetId());
+
+                    while (stack.Count > 0)
+                    {
+                        var top = stack.Peek();
+                        string topOp = GetTokenTypeName(top.GetTokenType(), top.GetId());
+
+                        if (GetPriority(topOp) >= GetPriority(op))
+                            output.Add(stack.Pop());
+                        else break;
+                    }
+                    stack.Push(token);
+                }
+                else if (type == 1 && GetTokenTypeName(type, token.GetId()) == "(")
+                {
+                    stack.Push(token);
+                }
+                else if (type == 1 && GetTokenTypeName(type, token.GetId()) == ")")
+                {
+                    while (stack.Count > 0 &&
+                           GetTokenTypeName(stack.Peek().GetTokenType(), stack.Peek().GetId()) != "(")
+                    {
+                        output.Add(stack.Pop());
+                    }
+                    if (stack.Count > 0) stack.Pop();
+                }
+            }
+
+            while (stack.Count > 0)
+                output.Add(stack.Pop());
+
+            return output;
+        }
+        private bool ValidatePostfix(List<Token> postfix)
+        {
+            int stack = 0;
+
+            foreach (var t in postfix)
+            {
+                if (t.GetTokenType() == 5 || t.GetTokenType() == 3 || t.GetTokenType() == 4)
+                    stack++;
+                else if (t.GetTokenType() == 2)
+                {
+                    if (stack < 2) return false;
+                    stack--;
+                }
+
+                if (stack < 1) return false;
+            }
+
+            return stack == 1;
+        }
         public bool Scan()
         {
             while (stack.Count > 0)
@@ -191,7 +269,8 @@ namespace Translation_tables
                 string result = "";
                 foreach (string err in errors)
                     result += err + Environment.NewLine;
-                File.WriteAllText("output_syntax.txt", result);
+                //File.WriteAllText("output_syntax.txt", result);
+                Console.WriteLine(result);
             }
             return true;
         }
@@ -245,7 +324,7 @@ namespace Translation_tables
                 case Nonterminal.ForStatement:
                     {
                         if (tokenType == 0 && tokenId == 2) return 10;
-                        return -1;
+                        else return -1;
                     }
 
                 case Nonterminal.Block:
@@ -403,10 +482,37 @@ namespace Translation_tables
 
                 case 9:
                     {
+                        List<Token> exprTokens = new List<Token>();
+
+                        int i = currentTokenIndex + 2;
+                        while (i < inputTokens.Count && !(inputTokens[i].GetTokenType() == 1 && inputTokens[i].GetId() == 1))
+                        {
+                            exprTokens.Add(inputTokens[i]);
+                            i++;
+                        }
+
+                        if (exprTokens.Count == 0)
+                        {
+                            Error("Empty expression");
+                            return;
+                        }
+
+                        var postfix = ToPostfix(exprTokens);
+
+                        if (!ValidatePostfix(postfix))
+                        {
+                            Error("Invalid expression");
+                        }
+
+                        string postfixStr = string.Join(" ", postfix.Select(t => GetTokenTypeName(t.GetTokenType(), t.GetId())));
+
+                        File.AppendAllText("postfix.txt", postfixStr + Environment.NewLine);
+
                         stack.Push(new Token(1, 1));
                         stack.Push(Nonterminal.Expr);
                         stack.Push(new Token(2, 4));
                         stack.Push(new Token(5, 0));
+
                         break;
                     }
 
