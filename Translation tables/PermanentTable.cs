@@ -23,7 +23,7 @@ namespace Translation_tables
         public List<Word> Alphabet = [];
         public List<Word> Words = [];
         public List<Word> Operators = [];
-        public List<Word> Seporators = [];
+        public List<Word> Separators = [];
 
         int i = 0;
 
@@ -50,13 +50,13 @@ namespace Translation_tables
             string[] separators = File.ReadAllLines("separators.txt");
             foreach (string separator in separators)
             {
-                Seporators.Add(new Word(separator, "separator"));
+                Separators.Add(new Word(separator, "separator"));
             }
 
             Alphabet.Sort((a, b) => a.name.CompareTo(b.name));
             Words.Sort((a, b) => a.name.CompareTo(b.name));
             Operators.Sort((a, b) => a.name.CompareTo(b.name));
-            Seporators.Sort((a, b) => a.name.CompareTo(b.name));
+            Separators.Sort((a, b) => a.name.CompareTo(b.name));
         }
     }
 }

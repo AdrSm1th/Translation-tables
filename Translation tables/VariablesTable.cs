@@ -9,7 +9,7 @@ namespace Translation_tables
 {
     struct Lexeme(string name, int value, bool constant)
     {
-        public string Name { get; set;  } = name;
+        public string Name { get; set; } = name;
         public int Value { get; set; } = value;
         public bool Const { get; set; } = constant;
     }
@@ -44,7 +44,7 @@ namespace Translation_tables
                 dynamicElements[hash] = new Lexeme(name, value, constant);
             }
             return hash;
-        }     
+        }
 
         public void ChangeLexeme(string name, int value)
         {
