@@ -89,35 +89,41 @@ namespace Translation_tables
                                 {
                                     case "letter":
                                         CurrentState = State.IDENTIFIER;
+                                        Buffer += ch;
                                         break;
                                     case "operator":
                                         CurrentState = State.OPERATOR;
+                                        Buffer += ch;
                                         break;
                                     case "separator":
-                                        if (elem.name == "/")
+                                        
+                                        if (elem.name == "/" && position + 1 < input.Length)
                                         {
-                                            if (position + 1 < input.Length && input[position + 1] == '/')
+                                            if (input[position + 1] == '/')
                                             {
-                                                position++;
+                                                position++;            
                                                 CurrentState = State.COMMENT;
                                                 Buffer = "";
                                                 break;
                                             }
-                                            else if (position + 1 < input.Length && input[position + 1] == '*')
+                                            else if (input[position + 1] == '*')
                                             {
-                                                position++;
+                                                position++;            
                                                 CurrentState = State.BLOCKCOMMENT;
                                                 Buffer = "/*";
                                                 break;
                                             }
-                                            else
-                                            {
-                                                CurrentState = State.OPERATOR;
-                                            }
                                         }
+                                        
+                                        int sepId = BinarySearch.Search(ch.ToString(), PermanentTable.Separators);
+                                        if (sepId != -1)
+                                        {
+                                            Tokens.Add(new Token(1, sepId));
+                                            output += Tokens[curTokenId++].GetToken();
+                                        }
+                                        Buffer = "";
                                         break;
                                 }
-                                Buffer += ch;
                             }
                             else if (ch == ' ' || ch == '\r' || ch == '\t')
                             {
@@ -140,7 +146,10 @@ namespace Translation_tables
                                 CurrentState = State.CONSTANT;
                             }
                             else
-                                Console.WriteLine($"Unknown symbol '{ch}' at position {position}");
+                            {
+                                Error($"Unknown symbol '{ch}'");
+                                Buffer = "";
+                            }
                         }
                         break;
 
@@ -292,17 +301,6 @@ namespace Translation_tables
                                     Buffer = "";
                                 }
                             }
-                        }
-                        break;
-
-                    case State.SEPARATOR:
-                        {
-                            CurrentState = State.START;
-                            Tokens.Add(new Token(1, BinarySearch.Search(Buffer, PermanentTable.Separators)));
-                            output += Tokens[curTokenId++].GetToken();
-                            Buffer = "";
-                            position--;
-                            Pos--;
                         }
                         break;
 
