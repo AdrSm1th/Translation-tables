@@ -187,6 +187,7 @@ namespace Translation_tables
         }
         public bool Scan()
         {
+            File.WriteAllText("output_syntax.txt");
             while (stack.Count > 0)
             {
                 Token currentToken = GetCurrentToken();
@@ -200,12 +201,12 @@ namespace Translation_tables
                     {
                         if (token.GetTokenType() == -1)
                         {
-                            Console.WriteLine("Разбор успешно завершён!");
+                            Console.WriteLine("Debuild successful!");
                             break;
                         }
                         else
                         {
-                            errors.Add("Ошибка: лишние токены после конца программы");
+                            errors.Add("Error: extra tokens after the end of the program");
                             break;
                         }
                     }
@@ -262,15 +263,18 @@ namespace Translation_tables
             }
 
             if (errors.Count == 0)
-                File.WriteAllText("output_syntax.txt", "Разбор завершён успешно, ошибок нет.");
-
+            {
+                string successMsg = "Debuild successful, none error.";
+                File.AppendAllText("output_syntax.txt", successMsg + "\n");
+                //Console.WriteLine(successMsg);
+            }
             else
             {
                 string result = "";
                 foreach (string err in errors)
                     result += err + Environment.NewLine;
-                //File.WriteAllText("output_syntax.txt", result);
-                Console.WriteLine(result);
+                File.AppendAllText("output_syntax.txt", result);
+                //Console.WriteLine(result);
             }
             return true;
         }
@@ -506,7 +510,7 @@ namespace Translation_tables
 
                         string postfixStr = string.Join(" ", postfix.Select(t => GetTokenTypeName(t.GetTokenType(), t.GetId())));
 
-                        File.AppendAllText("postfix.txt", postfixStr + Environment.NewLine);
+                        File.AppendAllText("output_syntax.txt", $"Postfix for assignment: {postfixStr}\n");
 
                         stack.Push(new Token(1, 1));
                         stack.Push(Nonterminal.Expr);

@@ -48,7 +48,12 @@ namespace Translation_tables
         }
 
         public List<Token> GetTokens() { return Tokens; }
-
+        private void ProcessNewLine()
+        {
+            Line++;
+            Pos = 0;
+            output += "\n";
+        }
         public void Scan(string filename)
         {
             string programInput = File.ReadAllText(filename);
@@ -60,28 +65,28 @@ namespace Translation_tables
             {
                 Pos++;
                 char ch = input[position];
-                int id = 0;
-                Word elem = new Word();
-
-                id = BinarySearch.Search(ch.ToString(), PermanentTable.Alphabet);
-                if (id != -1) elem = PermanentTable.Alphabet[id];
-
-                if (id == -1)
-                {
-                    id = BinarySearch.Search(ch.ToString(), PermanentTable.Operators);
-                    if (id != -1) elem = PermanentTable.Operators[id];
-                }
-
-                if (id == -1)
-                {
-                    id = BinarySearch.Search(ch.ToString(), PermanentTable.Separators);
-                    if (id != -1) elem = PermanentTable.Separators[id];
-                }
 
                 switch (CurrentState)
                 {
                     case State.START:
                         {
+                            int id = 0;
+                            Word elem = new Word();
+
+                            id = BinarySearch.Search(ch.ToString(), PermanentTable.Alphabet);
+                            if (id != -1) elem = PermanentTable.Alphabet[id];
+
+                            if (id == -1)
+                            {
+                                id = BinarySearch.Search(ch.ToString(), PermanentTable.Operators);
+                                if (id != -1) elem = PermanentTable.Operators[id];
+                            }
+
+                            if (id == -1)
+                            {
+                                id = BinarySearch.Search(ch.ToString(), PermanentTable.Separators);
+                                if (id != -1) elem = PermanentTable.Separators[id];
+                            }
                             int value = 0;
                             if (elem.type != null)
                             {
@@ -96,25 +101,25 @@ namespace Translation_tables
                                         Buffer += ch;
                                         break;
                                     case "separator":
-                                        
+
                                         if (elem.name == "/" && position + 1 < input.Length)
                                         {
                                             if (input[position + 1] == '/')
                                             {
-                                                position++;            
+                                                position++;
                                                 CurrentState = State.COMMENT;
                                                 Buffer = "";
                                                 break;
                                             }
                                             else if (input[position + 1] == '*')
                                             {
-                                                position++;            
+                                                position++;
                                                 CurrentState = State.BLOCKCOMMENT;
                                                 Buffer = "/*";
                                                 break;
                                             }
                                         }
-                                        
+
                                         int sepId = BinarySearch.Search(ch.ToString(), PermanentTable.Separators);
                                         if (sepId != -1)
                                         {
@@ -131,9 +136,7 @@ namespace Translation_tables
                             }
                             else if (ch == '\n')
                             {
-                                output += "\n";
-                                Line++;
-                                Pos = 0;
+                                ProcessNewLine();
                             }
                             else if (int.TryParse(ch.ToString(), out value))
                             {
@@ -145,6 +148,10 @@ namespace Translation_tables
                                 Buffer = "'";
                                 CurrentState = State.CONSTANT;
                             }
+                            else if (ch == '\r')
+                            {
+                                continue;
+                            }
                             else
                             {
                                 Error($"Unknown symbol '{ch}'");
@@ -153,8 +160,24 @@ namespace Translation_tables
                         }
                         break;
 
+
                     case State.IDENTIFIER:
                         {
+
+                            Word elem = new Word();
+                            int id = BinarySearch.Search(ch.ToString(), PermanentTable.Alphabet);
+                            if (id != -1) elem = PermanentTable.Alphabet[id];
+                            if (id == -1)
+                            {
+                                id = BinarySearch.Search(ch.ToString(), PermanentTable.Operators);
+                                if (id != -1) elem = PermanentTable.Operators[id];
+                            }
+                            if (id == -1)
+                            {
+                                id = BinarySearch.Search(ch.ToString(), PermanentTable.Separators);
+                                if (id != -1) elem = PermanentTable.Separators[id];
+                            }
+
                             if (ch == ' ' || elem.type == "operator" || elem.type == "separator")
                             {
                                 int wordId = BinarySearch.Search(Buffer, PermanentTable.Words);
@@ -321,13 +344,18 @@ namespace Translation_tables
                             {
                                 Buffer += value.ToString();
                             }
-                            else if (elem.type == "letter")
-                            {
-                                Error("Invalid number");
-                                break;
-                            }
                             else
                             {
+
+                                Word elem = new Word();
+                                int id = BinarySearch.Search(ch.ToString(), PermanentTable.Alphabet);
+                                if (id != -1) elem = PermanentTable.Alphabet[id];
+                                if (elem.type == "letter")
+                                {
+                                    Error("Invalid number");
+                                    break;
+                                }
+
                                 int hash = VariablesTable.Search(Buffer);
                                 if (hash == -1)
                                 {
@@ -344,39 +372,30 @@ namespace Translation_tables
                         break;
 
                     case State.COMMENT:
+                        if (ch == '\r') continue;
+                        if (ch == '\n' || ch == '$')
                         {
-                            if (Buffer.Length > 2 && Buffer[0].ToString() + Buffer[1].ToString() == "/*")
+                            
+                            if (ch == '\n')
                             {
-                                CurrentState = State.BLOCKCOMMENT;
+                                ProcessNewLine();
                             }
-                            else if (ch == '\n' || ch == '$')
-                            {
-                                CurrentState = State.START;
-                                Buffer = "";
-                                position--;
-                                Pos--;
-                            }
-                            else
-                            {
-                                Buffer += ch.ToString();
-                            }
+                            CurrentState = State.START;
+                            Buffer = "";
                         }
                         break;
 
                     case State.BLOCKCOMMENT:
+                        if (ch == '\r') continue;
+                        if (ch == '\n')
                         {
-                            int bufferSize = Buffer.Length;
-                            if (bufferSize >= 2 && Buffer[bufferSize - 2].ToString() + Buffer[bufferSize - 1].ToString() == "*/")
-                            {
-                                CurrentState = State.START;
-                                Buffer = "";
-                                position--;
-                                Pos--;
-                            }
-                            else
-                            {
-                                Buffer += ch.ToString();
-                            }
+                            ProcessNewLine();
+                        }
+                        Buffer += ch;
+                        if (Buffer.Length >= 2 && Buffer.Substring(Buffer.Length - 2) == "*/")
+                        {
+                            CurrentState = State.START;
+                            Buffer = "";
                         }
                         break;
 
