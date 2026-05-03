@@ -47,6 +47,10 @@ namespace Translation_tables
             VariablesTable = variablesTable;
         }
 
+        private bool IsInAlphabet(char c)
+        {
+            return BinarySearch.Search(c.ToString(), PermanentTable.Alphabet) != -1;
+        }
         public List<Token> GetTokens() { return Tokens; }
         private void ProcessNewLine()
         {
