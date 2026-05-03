@@ -83,7 +83,7 @@ int q3 = 1; int q4 = 3;
 
 // for
 int iter_num = 0;
-for (iter = 0; iter < 5; iter++) {
+for (iter = 0; iter; iter = iter + 1) {
     iter_num = iter_num + 1;
 } // iter_num = 5
 
@@ -93,21 +93,13 @@ for (iter = 0; iter < 5 iter++) {
 } // iter_num = 5
 
 // for  любой вложенности и в любой последовательности
-iter_num = 0;
-iter_num1 = 0;
-for (iter = 0; iter < 2; iter++) {
-    for (iter1 = 0; iter1 < 2; iter++) {
-        iter_num1 = iter_num1 + 1;
+int i;
+int j;
+int s;
+for (i = 0; i; i = i + 1) {
+    for (j = 0; j; j = j + 1) {
+        s = s + i * j;
     }
-    iter_num = iter_num + 1;
-}
-
-iter_num = 0;
-iter_num1 = 0;
-for (iter = 0; iter < 2; iter++) {
-    for (iter1 = 0; iter1 < 2; iter++) {
-        iter_num1 = iter_num1 + 1;
-    iter_num = iter_num + 1;
 }
 
 // Проверки на соответствие заявленного типа и значения переменной этого типа.

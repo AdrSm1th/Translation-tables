@@ -1,3 +1,35 @@
-[Semantic ERROR] Line 4, Pos 9: Variable 'a' is already declared
-[Semantic ERROR] Line 8, Pos 5: Named constant 'PI' already declared
-a 5 = ; a 4 = ; PI 5 = ; PI 52 = ;
+[Syntax ERROR] Line 12, Pos 10: Expected Expr, received ;
+[Semantic ERROR] Line 13, Pos 5: Variable 'z1' is already declared
+[Syntax ERROR] Line 14, Pos 1: Expected MulRest, received int
+[Syntax ERROR] Line 19, Pos 1: Expected identifier, received int
+[Syntax ERROR] Line 21, Pos 1: Expected identifier, received int
+[Syntax ERROR] Line 24, Pos 5: Expected identifier, received constant
+[Semantic ERROR] Line 33, Pos 1: Undeclared variable 'Pi'
+[Semantic ERROR] Line 39, Pos 5: Variable 'PI' is already declared
+[Syntax ERROR] Line 42, Pos 1: Expected identifier, received int
+[Syntax ERROR] Line 48, Pos 1: Expected identifier, received int
+[Syntax ERROR] Line 52, Pos 21: Expected constant, received const
+[Syntax ERROR] Line 53, Pos 21: Expected constant, received const
+[Syntax ERROR] Line 61, Pos 5: Expected identifier, received main
+[Syntax ERROR] Line 62, Pos 5: Expected identifier, received for
+[Syntax ERROR] Line 63, Pos 5: Expected identifier, received int
+[Semantic ERROR] Line 67, Pos 5: Variable 'u1' is already declared
+[Semantic ERROR] Line 77, Pos 6: Undeclared variable 'iter'
+[Semantic ERROR] Line 77, Pos 16: Undeclared variable 'iter'
+[Semantic ERROR] Line 77, Pos 22: Undeclared variable 'iter'
+[Semantic ERROR] Line 77, Pos 29: Undeclared variable 'iter'
+[Semantic ERROR] Line 82, Pos 6: Undeclared variable 'iter'
+[Semantic ERROR] Line 82, Pos 16: Undeclared variable 'iter'
+[Syntax ERROR] Line 82, Pos 40: Expected MulRest, received identifier
+[Syntax ERROR] Line 83, Pos 1: Expected Statement, received }
+[Syntax ERROR] Line 96, Pos 10: Expected Expr, received '
+[Syntax ERROR] Line 98, Pos 1: Expected MulRest, received int
+[Semantic ERROR] Line 104, Pos 12: Variable 'num_i1' is already declared
+[Semantic ERROR] Line 104, Pos 21: Variable 'num_i2' is already declared
+[Semantic ERROR] Line 105, Pos 13: Variable 'num_i1' is already declared
+[Semantic ERROR] Line 105, Pos 22: Variable 'num_i2' is already declared
+[Semantic ERROR] Line 106, Pos 12: Variable 'num_i1' is already declared
+[Semantic ERROR] Line 106, Pos 21: Variable 'num_i2' is already declared
+[Syntax ERROR] Line 116, Pos 1: Expected StatementList, received /
+Error: extra tokens after the end of the program
+z1 z1 = 2 PI = 3 = ; Pi 3 = ; PI 3 = ; MAX_VALUE 30 = ; Max_VALUE 10 = ; u1 1 = ; u1 3 = ; q1 1 = ; q3 1 = ; q4 3 = ; iter_num 0 = ; iter 0 = ; iter ; iter iter 1 + = iter_num iter_num 1 + = ; iter_num 0 = ; iter 0 = ; iter i ; j ; s ; i 0 = ; i ; i i 1 + = j 0 = ; j ; j j 1 + = s s i j * + = ; s1 s2 = 1 num_i1 = 1 = ; num_i2 1 = ; plus num_i1 num_i2 + = ; minus num_i1 num_i2 - = ; mult num_i1 num_i2 * = ;

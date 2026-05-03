@@ -29,7 +29,8 @@ namespace Translation_tables
         MulRest,
         Primary,
         DeclRest,
-        ConstDeclaration
+        ConstDeclaration,
+        AssignmentExpr
     }
 
     class SyntacticScanner
@@ -159,6 +160,14 @@ namespace Translation_tables
             }
         }
 
+        private Token PeekNextToken()
+        {
+            if (currentTokenIndex + 1 < inputTokens.Count)
+                return inputTokens[currentTokenIndex + 1];
+            else
+                return new Token(-1, 0);
+        }
+
         public bool Scan()
         {
             File.WriteAllText("output_syntax.txt", "");
@@ -283,7 +292,7 @@ namespace Translation_tables
 
                 case Nonterminal.StatementList:
                     {
-                        if (tokenType == 0 && (tokenId == 3 || tokenId == 2 || tokenId == 1) // int, for, const
+                        if (tokenType == 0 && (tokenId == 3 || tokenId == 2 || tokenId == 1)
                             || tokenType == 5
                             || (tokenType == 1 && tokenId == 7)) return 2;
                         else if (tokenType == -1 || tokenType == 1 && tokenId == 8) return 3;
@@ -333,8 +342,18 @@ namespace Translation_tables
 
                 case Nonterminal.Expr:
                     {
-                        if (tokenType == 5 || tokenType == 3 || tokenType == 4 || (tokenType == 1 && tokenId == 3)) return 14;
-                        else return -1;
+                        if (tokenType == 5)
+                        {
+                            Token next = PeekNextToken();
+                            if (next.GetTokenType() == 2 && next.GetId() == 4)
+                                return 34;
+                            else
+                                return 14;
+                        }
+                        else if (tokenType == 3 || tokenType == 4 || (tokenType == 1 && tokenId == 3))
+                            return 14;
+                        else
+                            return -1;
                     }
 
                 case Nonterminal.OrRest:
@@ -404,6 +423,10 @@ namespace Translation_tables
                         if (tokenType == 0 && tokenId == 1) return 33;
                         else return -1;
                     }
+
+                case Nonterminal.AssignmentExpr:
+                    if (tokenType == 5) return 35;
+                    else return -1;
 
                 default:
                     {
@@ -664,6 +687,16 @@ namespace Translation_tables
                         stack.Push(new Token(0, 1)); 
                         break;
                     }
+
+                case 34:
+                    stack.Push(Nonterminal.AssignmentExpr);
+                    break;
+
+                case 35:
+                    stack.Push(Nonterminal.Expr);
+                    stack.Push(new Token(2, 4));
+                    stack.Push(new Token(5, 0));
+                    break;
             }
         }
 

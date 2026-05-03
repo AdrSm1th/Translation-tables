@@ -1,9 +1,186 @@
+
+
+
+
+
+
+
+
+
 (0, 3)(0, 4)(1, 3)(1, 4)
 (1, 7)
-(0, 3)(5, 10)(2, 4)(4, 62)(1, 1)
-(0, 3)(5, 10)(2, 4)(4, 63)(1, 1)
+(0, 3)(5, 152)(2, 4)(1, 1)
+(0, 3)(5, 152)(2, 4)(4, 57)
+(0, 3)(5, 154)(4, 56)(1, 1)
 
-(0, 1)(0, 3)(3, 106)(2, 4)(4, 62)(1, 1)
 
-(0, 1)(0, 3)(3, 106)(2, 4)(4, 28)(1, 1)
+
+(0, 3)
+[ERROR] Line: 18, Pos: 6, Token: '1' -> Invalid number
+
+(0, 3)(5, 148)(2, 4)(4, 58)(1, 1)
+(0, 3)
+[ERROR] Line: 20, Pos: 6, Token: '1' -> Invalid number
+
+(0, 3)
+[ERROR] Line: 21, Pos: 8, Token: 'i.1' -> Invalid identifier
+
+(0, 3)(4, 58)
+[ERROR] Line: 22, Pos: 6, Token: '' -> Unknown symbol '.'
+
+(0, 3)(5, 2)(1, 0)(4, 58)(2, 4)(4, 58)(1, 1)
+(0, 3)(4, 58)(1, 0)(5, 2)(2, 4)(4, 58)(1, 1)
+
+
+(5, 106)(2, 4)(4, 56)(1, 1)
+
+[ERROR] Line: 28, Pos: 1, Token: '' -> Unknown symbol '.'
+
+
+[ERROR] Line: 29, Pos: 4, Token: '_PI' -> Identifier must start with letter
+
+
+[ERROR] Line: 30, Pos: 1, Token: '' -> Unknown symbol '!'
+
+
+[ERROR] Line: 31, Pos: 4, Token: '$PI' -> Identifier must start with letter
+
+
+(5, 74)(2, 4)(4, 56)(1, 1)
+
+[ERROR] Line: 34, Pos: 1, Token: '' -> Unknown symbol '.'
+
+
+[ERROR] Line: 35, Pos: 4, Token: '_Pi' -> Identifier must start with letter
+
+
+[ERROR] Line: 36, Pos: 1, Token: '' -> Unknown symbol '!'
+
+
+[ERROR] Line: 37, Pos: 4, Token: '$Pi' -> Identifier must start with letter
+
+
+(0, 3)(5, 106)(2, 4)(4, 56)(1, 1)
+
+[ERROR] Line: 40, Pos: 7, Token: 'int.PI' -> Invalid identifier
+
+(0, 3)
+[ERROR] Line: 41, Pos: 8, Token: '_PI' -> Identifier must start with letter
+
+(0, 3)
+[ERROR] Line: 42, Pos: 5, Token: '' -> Unknown symbol '!'
+
+(0, 3)
+[ERROR] Line: 43, Pos: 8, Token: '$PI' -> Identifier must start with letter
+
+
+(0, 3)(5, 74)(2, 4)(4, 56)(1, 1)
+
+[ERROR] Line: 46, Pos: 7, Token: 'int.Pi' -> Invalid identifier
+
+(0, 3)
+[ERROR] Line: 47, Pos: 8, Token: '_Pi' -> Identifier must start with letter
+
+(0, 3)
+[ERROR] Line: 48, Pos: 5, Token: '' -> Unknown symbol '!'
+
+(0, 3)
+[ERROR] Line: 49, Pos: 8, Token: '$Pi' -> Identifier must start with letter
+
+
+(0, 1)(0, 3)(3, 106)(2, 4)(4, 56)(1, 1)
+(0, 1)(0, 3)
+[ERROR] Line: 52, Pos: 18, Token: '.PI' -> Constant name must be uppercase letters only
+(0, 1)(0, 3)(3, 69)(2, 4)(4, 56)(1, 1)
+(0, 1)(0, 3)
+[ERROR] Line: 53, Pos: 18, Token: '!PI' -> Constant name must be uppercase letters only
+(0, 1)(0, 3)
+[ERROR] Line: 53, Pos: 38, Token: '$PI' -> Constant name must be uppercase letters only
+
+(0, 1)(0, 3)
+[ERROR] Line: 54, Pos: 17, Token: 'Pi' -> Constant name must be uppercase letters only
+(0, 1)(0, 3)
+[ERROR] Line: 54, Pos: 37, Token: '.Pi' -> Constant name must be uppercase letters only
+(0, 1)(0, 3)
+[ERROR] Line: 54, Pos: 57, Token: '_Pi' -> Constant name must be uppercase letters only
+(0, 1)(0, 3)
+[ERROR] Line: 54, Pos: 77, Token: '!Pi' -> Constant name must be uppercase letters only
+(0, 1)(0, 3)
+[ERROR] Line: 54, Pos: 97, Token: '$Pi' -> Constant name must be uppercase letters only
+
+(0, 3)(5, 115)(2, 4)(4, 98)(1, 1)
+(5, 115)(2, 4)(4, 32)(1, 1)
+
+(0, 3)(5, 61)(2, 4)(4, 98)(1, 1)
+
+
+(0, 3)(0, 4)(2, 4)(4, 58)(1, 1)
+(0, 3)(0, 2)(2, 4)(4, 58)(1, 1)
+(0, 3)(0, 3)(2, 4)(4, 57)(1, 1)
+
+
+(0, 3)(5, 119)(2, 4)(4, 58)(1, 1)
+(0, 3)(5, 119)(2, 4)(4, 56)(1, 1)
+
+
+(0, 3)(5, 187)(2, 4)(4, 58)(1, 1)
+[ERROR] Line: 70, Pos: 20, Token: 'int
+q2' -> Invalid identifier
+
+
+
+(0, 3)(5, 185)(2, 4)(4, 58)(1, 1)(0, 3)(5, 190)(2, 4)(4, 56)(1, 1)
+
+
+(0, 3)(5, 59)(2, 4)(4, 60)(1, 1)
+(0, 2)(1, 3)(5, 121)(2, 4)(4, 60)(1, 1)(5, 121)(1, 1)(5, 121)(2, 4)(5, 121)(2, 3)(4, 58)(1, 4)(1, 7)
+(5, 59)(2, 4)(5, 59)(2, 3)(4, 58)(1, 1)
 (1, 8)
+
+(5, 59)(2, 4)(4, 60)(1, 1)
+(0, 2)(1, 3)(5, 121)(2, 4)(4, 60)(1, 1)(5, 121)
+[ERROR] Line: 82, Pos: 21, Token: '' -> Unknown symbol '<'
+(5, 59)(2, 4)(5, 59)(2, 3)(4, 58)(1, 1)
+(1, 8)
+
+
+(0, 3)(5, 2)(1, 1)
+(0, 3)(5, 1)(1, 1)
+(0, 3)(5, 192)(1, 1)
+(0, 2)(1, 3)(5, 2)(2, 4)(4, 60)(1, 1)(5, 2)(1, 1)(5, 2)(2, 4)(5, 2)(2, 3)(4, 58)(1, 4)(1, 7)
+(0, 2)(1, 3)(5, 1)(2, 4)(4, 60)(1, 1)(5, 1)(1, 1)(5, 1)(2, 4)(5, 1)(2, 3)(4, 58)(1, 4)(1, 7)
+(5, 192)(2, 4)(5, 192)(2, 3)(5, 2)(2, 1)(5, 1)(1, 1)
+(1, 8)
+(1, 8)
+
+
+(0, 3)(5, 122)(2, 4)(1, 2)(5, 8)(1, 2)(1, 1)
+(0, 3)(5, 123)(2, 4)(4, 58)
+[ERROR] Line: 97, Pos: 11, Token: '' -> Unknown symbol '.'
+
+(0, 3)(5, 124)(2, 4)(1, 2)(5, 67)(1, 2)(1, 1)
+
+
+(0, 3)(5, 94)(2, 4)(4, 58)(1, 1)
+(0, 3)(5, 95)(2, 4)(4, 58)(1, 1)
+
+(0, 3)(5, 3)(2, 4)(5, 94)(2, 3)(5, 95)(1, 1)
+(0, 3)(5, 73)(2, 4)(5, 94)(2, 0)(5, 95)(1, 1)
+(0, 3)(5, 35)(2, 4)(5, 94)(2, 1)(5, 95)(1, 1)
+
+
+
+
+
+
+
+
+
+(1, 10)
+[ERROR] Line: 116, Pos: 3, Token: '' -> Unknown symbol '�'
+
+
+
+
+
+[ERROR] Line: 120, Pos: 1 -> Unclosed block comment
