@@ -1,2 +1,3 @@
-There is no rule for Expr with token }
-Ошибка: лишние токены после конца программы
+[Semantic ERROR] Line 4, Pos 9: Variable 'a' is already declared
+[Semantic ERROR] Line 8, Pos 5: Named constant 'PI' already declared
+a 5 = ; a 4 = ; PI 5 = ; PI 52 = ;

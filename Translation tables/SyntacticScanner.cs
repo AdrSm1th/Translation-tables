@@ -28,7 +28,8 @@ namespace Translation_tables
         MulExpr,
         MulRest,
         Primary,
-        DeclRest
+        DeclRest,
+        ConstDeclaration
     }
 
     class SyntacticScanner
@@ -38,17 +39,12 @@ namespace Translation_tables
         private int currentTokenIndex = 0;
         private List<string> errors = new List<string>();
         private PermanentTable permanentTable;
-        private int GetPriority(string op)
-        {
-            return op switch
-            {
-                "||" => 1,
-                "&&" => 2,
-                "+" or "-" => 3,
-                "*" => 4,
-                _ => 0
-            };
-        }
+        private Stack<Token> operatorStack = new Stack<Token>();
+        private List<string> postfixOutput = new List<string>();
+        private Dictionary<string, bool> declaredVars = new Dictionary<string, bool>();
+        private bool inDeclaration = false;
+        private bool inConstDeclaration = false;
+
         public SyntacticScanner(List<Token> tokens, PermanentTable permTable)
         {
             inputTokens = tokens;
@@ -94,6 +90,10 @@ namespace Translation_tables
                 case 2:
                     return permanentTable.Operators[id].name;
                 case 3:
+                    if (id >= 0 && id < variablesTable.dynamicElements.Length && variablesTable.dynamicElements[id].Name != null)
+                        return variablesTable.dynamicElements[id].Name.ToString();
+                    else
+                        return "Name constant";
                 case 4:
                     if (id >= 0 && id < variablesTable.dynamicElements.Length && variablesTable.dynamicElements[id].Name != null)
                         return variablesTable.dynamicElements[id].Value.ToString();
@@ -108,9 +108,11 @@ namespace Translation_tables
                     return "";
             }
         }
-        private bool Error(string errorText)
+        private bool Error(string errorText, Token errorToken)
         {
-            errors.Add($"[Syntax ERROR] Token index {currentTokenIndex}: {errorText}");
+            int line = errorToken.GetLine();
+            int pos = errorToken.GetPos();
+            errors.Add($"[Syntax ERROR] Line {line}, Pos {pos}: {errorText}");
 
             while (currentTokenIndex < inputTokens.Count)
             {
@@ -157,73 +159,6 @@ namespace Translation_tables
             }
         }
 
-        private List<Token> ToPostfix(List<Token> infix)
-        {
-            Stack<Token> stack = new Stack<Token>();
-            List<Token> output = new List<Token>();
-
-            foreach (var token in infix)
-            {
-                int type = token.GetTokenType();
-
-                if (type == 5 || type == 3 || type == 4)
-                {
-                    output.Add(token);
-                }
-                else if (type == 2)
-                {
-                    string op = GetTokenTypeName(token.GetTokenType(), token.GetId());
-
-                    while (stack.Count > 0)
-                    {
-                        var top = stack.Peek();
-                        string topOp = GetTokenTypeName(top.GetTokenType(), top.GetId());
-
-                        if (GetPriority(topOp) >= GetPriority(op))
-                            output.Add(stack.Pop());
-                        else break;
-                    }
-                    stack.Push(token);
-                }
-                else if (type == 1 && GetTokenTypeName(type, token.GetId()) == "(")
-                {
-                    stack.Push(token);
-                }
-                else if (type == 1 && GetTokenTypeName(type, token.GetId()) == ")")
-                {
-                    while (stack.Count > 0 &&
-                           GetTokenTypeName(stack.Peek().GetTokenType(), stack.Peek().GetId()) != "(")
-                    {
-                        output.Add(stack.Pop());
-                    }
-                    if (stack.Count > 0) stack.Pop();
-                }
-            }
-
-            while (stack.Count > 0)
-                output.Add(stack.Pop());
-
-            return output;
-        }
-        private bool ValidatePostfix(List<Token> postfix)
-        {
-            int stack = 0;
-
-            foreach (var t in postfix)
-            {
-                if (t.GetTokenType() == 5 || t.GetTokenType() == 3 || t.GetTokenType() == 4)
-                    stack++;
-                else if (t.GetTokenType() == 2)
-                {
-                    if (stack < 2) return false;
-                    stack--;
-                }
-
-                if (stack < 1) return false;
-            }
-
-            return stack == 1;
-        }
         public bool Scan()
         {
             File.WriteAllText("output_syntax.txt", "");
@@ -254,13 +189,15 @@ namespace Translation_tables
                     {
                         if (currentTokenType == token.GetTokenType() && currentToken.GetId() == token.GetId())
                         {
+                            Token actualToken = currentToken;
                             Coincidence();
+                            ProcessTerminal(actualToken);
                         }
                         else
                         {
                             string exp = GetTokenTypeName(token.GetTokenType(), token.GetId());
                             string rec = GetTokenTypeName(currentTokenType, currentToken.GetId());
-                            if (!Error($"Expected {exp}, received {rec}")) return false;
+                            Error($"Expected {exp}, received {rec}", currentToken);
                         }
                     }
 
@@ -271,12 +208,17 @@ namespace Translation_tables
                         else if ((token.GetTokenType() == 3 || token.GetTokenType() == 4) &&
                                  (currentTokenType == 3 || currentTokenType == 4)) match = true;
 
-                        if (match) Coincidence();
+                        if (match)
+                        {
+                            Token actualToken = currentToken;
+                            Coincidence();
+                            ProcessTerminal(actualToken);
+                        }
                         else
                         {
                             string exp = GetTokenTypeName(token.GetTokenType(), token.GetId());
                             string rec = GetTokenTypeName(currentTokenType, currentToken.GetId());
-                            if (!Error($"Expected {exp}, received {rec}")) return false;
+                            Error($"Expected {exp}, received {rec}", currentToken);
                         }
                     }
                 }
@@ -288,7 +230,7 @@ namespace Translation_tables
                     if (ruleId == -1)
                     {
                         string rec = GetTokenTypeName(currentToken.GetTokenType(), currentToken.GetId());
-                        if (!Error($"There is no rule for {nonterminal.ToString()} with token {rec}")) return false;
+                        Error($"Expected {nonterminal.ToString()}, received {rec}", currentToken);
                         continue;
                     }
                     else
@@ -315,6 +257,9 @@ namespace Translation_tables
                 File.AppendAllText("output_syntax.txt", result);
                 //Console.WriteLine(result);
             }
+
+            string postfixStr = string.Join(" ", postfixOutput);
+            File.AppendAllText("output_syntax.txt", postfixStr + "\n");
             return true;
         }
 
@@ -338,7 +283,9 @@ namespace Translation_tables
 
                 case Nonterminal.StatementList:
                     {
-                        if (tokenType == 0 && (tokenId == 3 || tokenId == 2) || tokenType == 5 || (tokenType == 1 && tokenId == 7)) return 2;
+                        if (tokenType == 0 && (tokenId == 3 || tokenId == 2 || tokenId == 1) // int, for, const
+                            || tokenType == 5
+                            || (tokenType == 1 && tokenId == 7)) return 2;
                         else if (tokenType == -1 || tokenType == 1 && tokenId == 8) return 3;
                         else return -1;
                     }
@@ -349,6 +296,7 @@ namespace Translation_tables
                         else if (tokenType == 5) return 5;
                         else if (tokenType == 0 && tokenId == 2) return 6;
                         else if (tokenType == 1 && tokenId == 7) return 7;
+                        else if (tokenType == 0 && tokenId == 1) return 32;
                         else return -1;
                     }
 
@@ -451,6 +399,12 @@ namespace Translation_tables
                         else return -1;
                     }
 
+                case Nonterminal.ConstDeclaration:
+                    {
+                        if (tokenType == 0 && tokenId == 1) return 33;
+                        else return -1;
+                    }
+
                 default:
                     {
                         return -1;
@@ -517,6 +471,7 @@ namespace Translation_tables
 
                 case 8:
                     {
+                        inDeclaration = true;
                         stack.Push(Nonterminal.DeclRest);
                         stack.Push(new Token(5, 0));
                         stack.Push(new Token(0, 3));
@@ -525,37 +480,10 @@ namespace Translation_tables
 
                 case 9:
                     {
-                        List<Token> exprTokens = new List<Token>();
-
-                        int i = currentTokenIndex + 2;
-                        while (i < inputTokens.Count && !(inputTokens[i].GetTokenType() == 1 && inputTokens[i].GetId() == 1))
-                        {
-                            exprTokens.Add(inputTokens[i]);
-                            i++;
-                        }
-
-                        if (exprTokens.Count == 0)
-                        {
-                            Error("Empty expression");
-                            return;
-                        }
-
-                        var postfix = ToPostfix(exprTokens);
-
-                        if (!ValidatePostfix(postfix))
-                        {
-                            Error("Invalid expression");
-                        }
-
-                        string postfixStr = string.Join(" ", postfix.Where(t => !(t.GetTokenType() == 1 && (t.GetId() == 3 || t.GetId() == 4))).Select(t => GetTokenString(t)));
-
-                        File.AppendAllText("output_syntax.txt", $"Postfix for assignment: {postfixStr}\n");
-
                         stack.Push(new Token(1, 1));
                         stack.Push(Nonterminal.Expr);
                         stack.Push(new Token(2, 4));
-                        stack.Push(new Token(5, 0));
-
+                        stack.Push(new Token(5, 0)); 
                         break;
                     }
 
@@ -713,36 +641,167 @@ namespace Translation_tables
 
                 case 31:
                     {
-                        List<Token> exprTokens = new List<Token>();
-                        int i = currentTokenIndex + 1; 
-                                                       
-                        while (i < inputTokens.Count && !(inputTokens[i].GetTokenType() == 1 && inputTokens[i].GetId() == 1))
-                        {
-                            exprTokens.Add(inputTokens[i]);
-                            i++;
-                        }
-
-                        if (exprTokens.Count > 0)
-                        {
-                            var postfix = ToPostfix(exprTokens);
-                            if (!ValidatePostfix(postfix))
-                            {
-                                Error("Invalid expression in initialization");
-                            }
-                            else
-                            {
-                                string postfixStr = string.Join(" ", postfix.Where(t => !(t.GetTokenType() == 1 && (t.GetId() == 3 || t.GetId() == 4))).Select(t => GetTokenString(t)));
-                                File.AppendAllText("output_syntax.txt", $"Postfix for initialization: {postfixStr}\n");
-                                //Console.WriteLine(postfixStr);
-                            }
-                        }
-
                         stack.Push(new Token(1, 1));
                         stack.Push(Nonterminal.Expr);
                         stack.Push(new Token(2, 4));
                         break;
                     }
+
+                case 32:
+                    {
+                        stack.Push(Nonterminal.ConstDeclaration);
+                        break;
+                    }
+
+                case 33:
+                    {
+                        inConstDeclaration = true;
+                        stack.Push(new Token(1, 1));
+                        stack.Push(Nonterminal.Expr);
+                        stack.Push(new Token(2, 4));
+                        stack.Push(new Token(3, 0));
+                        stack.Push(new Token(0, 3));
+                        stack.Push(new Token(0, 1)); 
+                        break;
+                    }
+            }
+        }
+
+        private int GetPriority(Token t)
+        {
+            if (t.GetTokenType() == 1)
+            {
+                if (t.GetId() == 3 || t.GetId() == 4) return 0;
+                if (t.GetId() == 1) return -1;
+                if (t.GetId() == 8) return -2;
+            }
+            if (t.GetTokenType() == 2)
+            {
+                string op = GetTokenString(t);
+                return op switch
+                {
+                    "=" => 1,
+                    "||" => 3,
+                    "&&" => 4,
+                    "+" or "-" => 7,
+                    "*" => 8,
+                    _ => -1
+                };
+            }
+            return -1;
+        }
+
+        private void ProcessOperator(Token op)
+        {
+            int prio = GetPriority(op);
+            while (operatorStack.Count > 0)
+            {
+                Token top = operatorStack.Peek();
+                int topPrio = GetPriority(top);
+                if (topPrio >= prio && topPrio != 0)
+                {
+                    postfixOutput.Add(GetTokenString(top));
+                    operatorStack.Pop();
+                }
+                else break;
+            }
+            operatorStack.Push(op);
+        }
+
+        private void ProcessLeftParen(Token paren) => operatorStack.Push(paren);
+
+        private void ProcessRightParen()
+        {
+            while (operatorStack.Count > 0)
+            {
+                Token top = operatorStack.Peek();
+                if (top.GetTokenType() == 1 && top.GetId() == 3)
+                {
+                    operatorStack.Pop();
+                    break;
+                }
+                postfixOutput.Add(GetTokenString(top));
+                operatorStack.Pop();
+            }
+        }
+
+        private void ProcessTerminal(Token t)
+        {
+            int type = t.GetTokenType();
+            int id = t.GetId();
+
+            if (type == 5)              
+            {
+                if (inDeclaration)
+                {
+                    string varName = GetTokenString(t);
+                    if (declaredVars.ContainsKey(varName))
+                    {
+                        errors.Add($"[Semantic ERROR] Line {t.GetLine()}, Pos {t.GetPos()}: Variable '{varName}' is already declared");
+                    }
+                    else
+                    {
+                        declaredVars[varName] = true;
+                    }
+                }
+
+                else
+                {
+                    string varName = GetTokenString(t);
+                    if (!declaredVars.ContainsKey(varName))
+                    {
+                        errors.Add($"[Semantic ERROR] Line {t.GetLine()}, Pos {t.GetPos()}: Undeclared variable '{varName}'");
+                    }
+                }
+
+                postfixOutput.Add(GetTokenString(t));
+            }
+            else if (type == 3 || type == 4)
+            {
+                if (type == 3 && inConstDeclaration)
+                {
+                    string constName = GetTokenString(t);
+                    if (declaredVars.ContainsKey(constName))
+                    {
+                        errors.Add($"[Semantic ERROR] Line {t.GetLine()}, Pos {t.GetPos()}: Named constant '{constName}' already declared");
+                    }
+                    else
+                    {
+                        declaredVars[constName] = true;
+                    }
+                    inConstDeclaration = false;
+                }
+                postfixOutput.Add(GetTokenString(t));
+            }
+            else if (type == 2)
+            {
+                ProcessOperator(t);
+            }
+            else if (type == 1)
+            {
+                if (id == 3)
+                    ProcessLeftParen(t);
+                else if (id == 4)
+                    ProcessRightParen();
+                else if (id == 1 || id == 8)
+                {
+                    while (operatorStack.Count > 0)
+                    {
+                        Token top = operatorStack.Pop();
+                        if (top.GetTokenType() == 1 && top.GetId() == 3) continue;
+                        postfixOutput.Add(GetTokenString(top));
+                    }
+                    if (id == 1)
+                    {
+                        postfixOutput.Add(";");
+                        if (inDeclaration)
+                            inDeclaration = false;
+                        if (inConstDeclaration)
+                            inConstDeclaration = false;
+                    }
+                }
             }
         }
     }
 }
+
