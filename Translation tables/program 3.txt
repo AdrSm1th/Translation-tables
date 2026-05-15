@@ -15,53 +15,30 @@ int z3 3;
 
 // »мена идентификаторов состо€т из символов алфавита
 // int
-int 1i = 1;
-int i_1 = 1;
-int 1_i = 1;
-int i.1 = 1;
-int 1.i = 1;
-int i,1 = 1;
-int 1,i = 1;
+int 1i = 1; // не поругалс€
+int i_1 = 1; // ложно поругалс€
+int 1_i = 1; // не поругалс€ 
+int i.1 = 1; 
+int 1.i = 1; // не поругалс€
+int i,1 = 1; // не поругалс€
+int 1,i = 1; 
 
 // ѕроверка констант
-PI = 3;
-.PI = 3;
-_PI = 3;
-!PI = 3;
-$PI = 3;
+PI = 3; // не поругалс€
 
-Pi = 3;
-.Pi = 3;
-_Pi = 3;
-!Pi = 3;
-$Pi = 3;
+Pi = 3; 
 
-int PI = 3;
-int.PI = 3;
-int _PI = 3;
-int !PI = 3;
-int $PI = 3;
+int PI = 3; 
 
 int Pi = 3;
-int.Pi = 3;
-int _Pi = 3;
-int !Pi = 3;
-int $Pi = 3;
 
 const int PI = 3;
-const int .PI = 3;
-const int _PI = 3;
-const int !PI = 3;
-const int $PI = 3;
 
 const int Pi = 3;
-const int .Pi = 3;
-const int _Pi = 3;
-const int !Pi = 3;
-const int $Pi = 3;
 
-int MAX_VALUE = 10;
-MAX_VALUE = 30;
+
+int MAX_VALUE = 10; 
+MAX_VALUE = 30; // FALSE
 
 int Max_VALUE = 10;
 													
@@ -82,30 +59,41 @@ q2 = 3;
 int q3 = 1; int q4 = 3;
 
 // for
+int iter = 0;
 int iter_num = 0;
-for (iter = 0; iter; iter = iter + 1) {
+for (iter = 0; iter; iter = iter + 1)
+{
     iter_num = iter_num + 1;
 } // iter_num = 5
 
 iter_num = 0;
-for (iter = 0; iter < 5 iter++) {
+for (iter = 0; iter < 5 iter = iter + 1)
+{
     iter_num = iter_num + 1;
 } // iter_num = 5
 
 // for  любой вложенности и в любой последовательности
-int i;
-int j;
-int s;
-for (i = 0; i; i = i + 1) {
-    for (j = 0; j; j = j + 1) {
-        s = s + i * j;
+iter_num = 0;
+int iter_num1 = 0;
+for (iter = 0; iter; iter = iter + 1) {
+    for (iter1 = 0; iter1; iter = iter + 1) {
+        iter_num1 = iter_num1 + 1;
     }
+    iter_num = iter_num + 1;
+}
+
+iter_num = 0;
+iter_num1 = 0;
+for (iter = 0; iter; iter = iter + 1) {
+    for (iter1 = 0; iter1; iter = iter + 1) {
+        iter_num1 = iter_num1 + 1;
+    iter_num = iter_num + 1;
 }
 
 // ѕроверки на соответствие за€вленного типа и значени€ переменной этого типа.
 int s1 = 'c';
 int s2 = 1.1;
-int s3 = 'char';
+int s3 = 'char'; // не поругалс€
 
 // ћатематические операции
 int num_i1 = 1;

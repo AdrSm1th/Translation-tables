@@ -46,6 +46,10 @@ namespace Translation_tables
         private bool inDeclaration = false;
         private bool inConstDeclaration = false;
 
+        public List<string> Errors => errors;
+
+        public string PostfixString => string.Join(" ", postfixOutput);
+
         public SyntacticScanner(List<Token> tokens, PermanentTable permTable)
         {
             inputTokens = tokens;
@@ -111,27 +115,34 @@ namespace Translation_tables
         }
         private bool Error(string errorText, Token errorToken)
         {
+            inDeclaration = false;
+            inConstDeclaration = false;
+
             int line = errorToken.GetLine();
             int pos = errorToken.GetPos();
             errors.Add($"[Syntax ERROR] Line {line}, Pos {pos}: {errorText}");
 
+            // пропуск токенов до ';' или '}' (без удаления)
             while (currentTokenIndex < inputTokens.Count)
             {
                 Token t = inputTokens[currentTokenIndex];
                 if (t.GetTokenType() == 1 && (t.GetId() == 1 || t.GetId() == 8))
-                {
-                    currentTokenIndex++;
                     break;
-                }
                 currentTokenIndex++;
             }
 
-
+            // очистка стека до безопасного нетерминала
             while (stack.Count > 0)
             {
                 if (stack.Peek() is Nonterminal nt &&
                     (nt == Nonterminal.Statement || nt == Nonterminal.StatementList || nt == Nonterminal.Function))
                 {
+                    if (currentTokenIndex < inputTokens.Count)
+                    {
+                        Token t = inputTokens[currentTokenIndex];
+                        if (t.GetTokenType() == 1 && (t.GetId() == 1 || t.GetId() == 8))
+                            currentTokenIndex++; // пропускаем разделитель, чтобы начать следующую инструкцию
+                    }
                     return true;
                 }
                 stack.Pop();
@@ -170,7 +181,6 @@ namespace Translation_tables
 
         public bool Scan()
         {
-            File.WriteAllText("output_syntax.txt", "");
             while (stack.Count > 0)
             {
                 Token currentToken = GetCurrentToken();
@@ -252,23 +262,13 @@ namespace Translation_tables
                 else if (element is string s && s == "eps") { stack.Pop(); continue; }
             }
 
-            if (errors.Count == 0)
+            while (operatorStack.Count > 0)
             {
-                string successMsg = "Debuild successful, none error.";
-                File.AppendAllText("output_syntax.txt", successMsg + "\n");
-                //Console.WriteLine(successMsg);
-            }
-            else
-            {
-                string result = "";
-                foreach (string err in errors)
-                    result += err + Environment.NewLine;
-                File.AppendAllText("output_syntax.txt", result);
-                //Console.WriteLine(result);
+                Token top = operatorStack.Pop();
+                if (top.GetTokenType() == 1 && top.GetId() == 3) continue;
+                postfixOutput.Add(GetTokenString(top));
             }
 
-            string postfixStr = string.Join(" ", postfixOutput);
-            File.AppendAllText("output_syntax.txt", postfixStr + "\n");
             return true;
         }
 
@@ -776,6 +776,7 @@ namespace Translation_tables
                     {
                         declaredVars[varName] = true;
                     }
+                    inDeclaration = false;
                 }
 
                 else

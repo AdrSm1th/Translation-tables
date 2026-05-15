@@ -25,9 +25,34 @@ class Program
 
             Scanner scanner = new Scanner(permanentTable, variablesTable);
             scanner.Scan("program 3.txt");
+            var lexErrors = scanner.LexicalErrors;
             List<Token> tokens = scanner.GetTokens();
+
             SyntacticScanner syncScanner = new SyntacticScanner(tokens, permanentTable, variablesTable);
             syncScanner.Scan();
+            var synErrors = syncScanner.Errors;
+
+            var allErrors = new List<string>();
+            allErrors.AddRange(lexErrors);
+            allErrors.AddRange(synErrors);
+
+            allErrors.Sort((a, b) =>
+            {
+                var matchA = System.Text.RegularExpressions.Regex.Match(a, @"Line (\d+), Pos (\d+)");
+                var matchB = System.Text.RegularExpressions.Regex.Match(b, @"Line (\d+), Pos (\d+)");
+                if (!matchA.Success || !matchB.Success) return 0;
+                int lineA = int.Parse(matchA.Groups[1].Value);
+                int posA = int.Parse(matchA.Groups[2].Value);
+                int lineB = int.Parse(matchB.Groups[1].Value);
+                int posB = int.Parse(matchB.Groups[2].Value);
+                if (lineA != lineB) return lineA.CompareTo(lineB);
+                return posA.CompareTo(posB);
+            });
+
+            File.WriteAllLines("errors.txt", allErrors);
+
+            File.WriteAllText("tokens.txt", scanner.Output);
+            File.WriteAllText("postfix.txt", syncScanner.PostfixString);
 
             choice = int.Parse(Console.ReadLine());
 

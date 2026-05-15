@@ -2,26 +2,37 @@
 [Semantic ERROR] Line 13, Pos 5: Variable 'z1' is already declared
 [Syntax ERROR] Line 14, Pos 1: Expected MulRest, received int
 [Syntax ERROR] Line 18, Pos 5: Expected identifier, received ;
+[Lexical ERROR] Line 18, Pos 6: Invalid number
 [Syntax ERROR] Line 20, Pos 5: Expected identifier, received ;
+[Lexical ERROR] Line 20, Pos 6: Invalid number
 [Syntax ERROR] Line 21, Pos 5: Expected identifier, received ;
+[Lexical ERROR] Line 21, Pos 8: Invalid identifier
 [Syntax ERROR] Line 22, Pos 5: Expected identifier, received constant
+[Lexical ERROR] Line 22, Pos 6: Unknown symbol '.'
 [Syntax ERROR] Line 23, Pos 6: Expected DeclRest, received ,
 [Syntax ERROR] Line 24, Pos 5: Expected identifier, received constant
 [Semantic ERROR] Line 27, Pos 1: Undeclared variable 'PI'
 [Semantic ERROR] Line 29, Pos 1: Undeclared variable 'Pi'
 [Semantic ERROR] Line 35, Pos 1: Named constant 'PI' already declared
 [Syntax ERROR] Line 37, Pos 1: Expected constant, received ;
+[Lexical ERROR] Line 37, Pos 17: Constant name must be uppercase letters only
 [Syntax ERROR] Line 46, Pos 5: Expected identifier, received main
 [Syntax ERROR] Line 47, Pos 5: Expected identifier, received for
 [Syntax ERROR] Line 48, Pos 5: Expected identifier, received int
 [Semantic ERROR] Line 52, Pos 5: Variable 'u1' is already declared
 [Syntax ERROR] Line 55, Pos 13: Expected StatementList, received ;
+[Lexical ERROR] Line 55, Pos 20: Invalid identifier
+[Lexical ERROR] Line 69, Pos 21: Unknown symbol '<'
+[Syntax ERROR] Line 70, Pos 1: Expected MulRest, received {
+[Syntax ERROR] Line 72, Pos 1: Expected Statement, received }
 [Semantic ERROR] Line 78, Pos 10: Undeclared variable 'iter1'
 [Semantic ERROR] Line 78, Pos 21: Undeclared variable 'iter1'
 [Semantic ERROR] Line 87, Pos 10: Undeclared variable 'iter1'
 [Semantic ERROR] Line 87, Pos 21: Undeclared variable 'iter1'
 [Syntax ERROR] Line 93, Pos 10: Expected Expr, received '
+[Lexical ERROR] Line 94, Pos 11: Unknown symbol '.'
 [Syntax ERROR] Line 95, Pos 10: Expected Expr, received '
 [Syntax ERROR] Line 113, Pos 1: Expected StatementList, received /
+[Lexical ERROR] Line 113, Pos 3: Unknown symbol '�'
+[Lexical ERROR] Line 118, Pos 1: Unclosed block comment
 Error: extra tokens after the end of the program
-z1 z1 = 2 i_1 = 1 = ; i PI 3 = ; Pi 3 = ; PI 3 = ; Pi 3 = ; PI 3 = ; MAX_VALUE 10 = ; MAX_VALUE 30 = ; Max_VALUE 10 = ; u1 1 = ; u1 3 = ; q1 1 = ; q3 1 = ; q4 3 = ; iter 0 = ; iter_num 0 = ; iter 0 = ; iter ; iter iter 1 + = iter_num iter_num 1 + = ; iter_num 0 = ; iter 0 = ; iter ; iter iter 1 + = iter_num iter_num 1 + = ; iter_num 0 = ; iter_num1 0 = ; iter 0 = ; iter ; iter iter 1 + = iter1 0 = ; iter1 ; iter iter 1 + = iter_num1 iter_num1 1 + = ; iter_num iter_num 1 + = ; iter_num 0 = ; iter_num1 0 = ; iter 0 = ; iter ; iter iter 1 + = iter1 0 = ; iter1 ; iter iter 1 + = iter_num1 iter_num1 1 + = ; iter_num iter_num 1 + = ; s1 s2 = 1 = ; s3 num_i1 = 1 = ; num_i2 1 = ; plus num_i1 num_i2 + = ; minus num_i1 num_i2 - = ; mult num_i1 num_i2 * = ;

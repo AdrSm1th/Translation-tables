@@ -48,6 +48,10 @@ namespace Translation_tables
 
         private int startLine = 1, startPos = 1;
 
+        public List<string> LexicalErrors { get; private set; } = new List<string>();
+
+        public string Output => output;
+
         public Scanner(PermanentTable permanentTable, VariablesTable variablesTable)
         {
             PermanentTable = permanentTable;
@@ -104,6 +108,8 @@ namespace Translation_tables
                                         Buffer += ch;
                                         break;
                                     case "operator":
+                                        startLine = Line;
+                                        startPos = Pos;
                                         CurrentState = State.OPERATOR;
                                         Buffer += ch;
                                         break;
@@ -343,6 +349,7 @@ namespace Translation_tables
                                 if (parts.Length < 4)
                                 {
                                     Error("Invalid constant declaration");
+                                    position--; Pos--;    // ← возвращаем ';'
                                     break;
                                 }
 
@@ -363,6 +370,7 @@ namespace Translation_tables
                                 {
                                     Buffer = parts[1];
                                     Error("Constant name must be uppercase letters only");
+                                    position--; Pos--;    // ← возвращаем ';'
                                     break;
                                 }
 
@@ -373,7 +381,12 @@ namespace Translation_tables
                                 output += Tokens[curTokenId++].GetToken();
 
                                 int eqId = BinarySearch.Search("=", PermanentTable.Operators);
-                                if (eqId == -1) { Error("Operator = not found"); break; }
+                                if (eqId == -1)
+                                {
+                                    Error("Operator = not found");
+                                    position--; Pos--;    // ← возвращаем ';'
+                                    break;
+                                }
                                 Tokens.Add(new Token(2, eqId, startLine, startPos));
                                 output += Tokens[curTokenId++].GetToken();
 
@@ -381,6 +394,7 @@ namespace Translation_tables
                                 {
                                     Buffer = parts[3];
                                     Error("Invalid constant value");
+                                    position--; Pos--;    // ← возвращаем ';'
                                     break;
                                 }
                                 int valHash = VariablesTable.Search(parts[3]);
@@ -398,27 +412,35 @@ namespace Translation_tables
 
                     case State.ERROR:
                         {
-                            if (ch == ';' || ch == '\n')
+                            if (ch == '\n')
                             {
+                                ProcessNewLine();
                                 CurrentState = State.START;
                                 Buffer = "";
                             }
+                            else if (ch == ';')
+                            {
+                                int semiId = BinarySearch.Search(";", PermanentTable.Separators);
+                                if (semiId != -1)
+                                    Tokens.Add(new Token(1, semiId, startLine, startPos));
+                                CurrentState = State.START;
+                                Buffer = "";
+                                output += Tokens[curTokenId++].GetToken();
+                            }
+                            break;
                         }
-                        break;
                 }
             }
 
             if (CurrentState == State.BLOCKCOMMENT)
             {
-                output += $"\n[ERROR] Line: {Line}, Pos: {Pos} -> Unclosed block comment\n";
+                LexicalErrors.Add($"[Lexical ERROR] Line {Line}, Pos {Pos}: Unclosed block comment");
             }
-
-            File.WriteAllText("output.txt", output);
         }
 
         private void Error(string message)
         {
-            output += $"\n[ERROR] Line: {Line}, Pos: {Pos}, Token: '{Buffer}' -> {message}\n";
+            LexicalErrors.Add($"[Lexical ERROR] Line {Line}, Pos {Pos}: {message}");
             Buffer = "";
             CurrentState = State.ERROR;
         }

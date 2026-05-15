@@ -1,14 +1,4 @@
 int main()
 {
-   int a, x;
-   a = 5;
-   x = 5;
-   int PI;
-   PI = 3;
-   for(int i; i = 10; i; i - 1)
-   {
-      a = a + 1;
-   }
-   a = a - 10;
-   a = a * x;
+   int b = a;
 }
