@@ -1,4 +1,6 @@
-﻿using Microsoft.VisualBasic;
+﻿//Program.cs
+
+using Microsoft.VisualBasic;
 using System;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
@@ -24,12 +26,13 @@ class Program
             Console.WriteLine("<4> - Exit");
 
             Scanner scanner = new Scanner(permanentTable, variablesTable);
-            scanner.Scan("program 3.txt");
+            scanner.Scan("program.txt");
             var lexErrors = scanner.LexicalErrors;
             List<Token> tokens = scanner.GetTokens();
 
             SyntacticScanner syncScanner = new SyntacticScanner(tokens, permanentTable, variablesTable);
             syncScanner.Scan();
+            syncScanner.FoldConstants();
             var synErrors = syncScanner.Errors;
 
             var allErrors = new List<string>();

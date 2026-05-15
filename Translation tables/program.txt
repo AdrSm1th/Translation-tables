@@ -1,4 +1,12 @@
 int main()
 {
-   int b = a;
+   const int PI = 3;
+   PI = 5;
+
+   int a;
+   int b = 4 + a;
+   a = 5;
+   int c = a + 4;
+
+   int d = 1 + 2 + 3 + PI;
 }

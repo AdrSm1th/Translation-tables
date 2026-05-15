@@ -1,4 +1,6 @@
-﻿using System;
+﻿//Scannes.cs
+
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -233,7 +235,7 @@ namespace Translation_tables
                                     int hash = VariablesTable.Search(Buffer);
 
                                     if (hash == -1)
-                                        hash = VariablesTable.InsertLexeme(Buffer, 0, false);
+                                        hash = VariablesTable.InsertLexeme(Buffer, 0, false, VarType.Int, false);
                                     Tokens.Add(new Token(5, hash, startLine, startPos));
                                     output += Tokens[curTokenId++].GetToken();
                                 }
@@ -296,7 +298,7 @@ namespace Translation_tables
                                 int hash = VariablesTable.Search(Buffer);
                                 if (hash == -1)
                                 {
-                                    hash = VariablesTable.InsertLexeme(Buffer, int.Parse(Buffer), true);
+                                    hash = VariablesTable.InsertLexeme(Buffer, int.Parse(Buffer), true, VarType.Int, true);
                                 }
                                 Tokens.Add(new Token(4, hash, startLine, startPos));
                                 output += Tokens[curTokenId++].GetToken();
@@ -376,7 +378,7 @@ namespace Translation_tables
 
                                 int hash = VariablesTable.Search(parts[1]);
                                 if (hash == -1)
-                                    hash = VariablesTable.InsertLexeme(parts[1], 0, true);
+                                    hash = VariablesTable.InsertLexeme(parts[1], 0, true, VarType.Int, true);
                                 Tokens.Add(new Token(3, hash, startLine, startPos));
                                 output += Tokens[curTokenId++].GetToken();
 
@@ -399,7 +401,7 @@ namespace Translation_tables
                                 }
                                 int valHash = VariablesTable.Search(parts[3]);
                                 if (valHash == -1)
-                                    valHash = VariablesTable.InsertLexeme(parts[3], val, true);
+                                    valHash = VariablesTable.InsertLexeme(parts[3], val, true, VarType.Int, true);
                                 Tokens.Add(new Token(4, valHash, startLine, startPos));
                                 output += Tokens[curTokenId++].GetToken();
 

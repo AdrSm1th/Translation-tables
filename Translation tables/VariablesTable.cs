@@ -1,4 +1,6 @@
-﻿using System;
+﻿//VariblesTable.cs
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -7,11 +9,15 @@ using System.Threading.Tasks;
 
 namespace Translation_tables
 {
-    struct Lexeme(string name, int value, bool constant)
+    enum VarType { Int }
+
+    struct Lexeme(string name, int value, bool constant, VarType type = VarType.Int, bool isInit = false)
     {
         public string Name { get; set; } = name;
         public int Value { get; set; } = value;
         public bool Const { get; set; } = constant;
+        public VarType Type { get; set; } = type;
+        public bool IsInitialized { get; set; } = isInit;
     }
 
     class VariablesTable
@@ -29,7 +35,7 @@ namespace Translation_tables
             return Math.Abs(h % tableSize);
         }
 
-        public int InsertLexeme(string name, int value, bool constant)
+        public int InsertLexeme(string name, int value, bool constant, VarType type = VarType.Int, bool isInit = false)
         {
             int hash = Hash(name);
             if (dynamicElements[hash].Name == null) dynamicElements[hash] = new Lexeme(name, value, constant);
@@ -43,6 +49,7 @@ namespace Translation_tables
                 }
                 dynamicElements[hash] = new Lexeme(name, value, constant);
             }
+            dynamicElements[hash] = new Lexeme(name, value, constant, type, isInit);
             return hash;
         }
 
@@ -65,6 +72,19 @@ namespace Translation_tables
                 i++;
             }
             return hash;
+        }
+
+        public void UpdateLexemeAttributes(string name, VarType type, bool isInitialized, bool isConst)
+        {
+            int idx = Search(name);
+            if (idx != -1)
+            {
+                var lex = dynamicElements[idx];
+                lex.Type = type;
+                lex.IsInitialized = isInitialized;
+                lex.Const = isConst;
+                dynamicElements[idx] = lex;
+            }
         }
     }
 }

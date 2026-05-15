@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿//SynctaticsScannes.cs
+
+using System.IO;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -45,6 +47,12 @@ namespace Translation_tables
         private Dictionary<string, bool> declaredVars = new Dictionary<string, bool>();
         private bool inDeclaration = false;
         private bool inConstDeclaration = false;
+        private string lastDeclaredVarName = null;
+        private bool lastDeclHasInit = false;
+        private string lastConstName = null;
+        private string assignmentTargetName = null;
+        private bool constExprCapture = false;
+        private int constExprStart = 0;
 
         public List<string> Errors => errors;
 
@@ -117,6 +125,7 @@ namespace Translation_tables
         {
             inDeclaration = false;
             inConstDeclaration = false;
+            assignmentTargetName = null;
 
             int line = errorToken.GetLine();
             int pos = errorToken.GetPos();
@@ -506,7 +515,7 @@ namespace Translation_tables
                         stack.Push(new Token(1, 1));
                         stack.Push(Nonterminal.Expr);
                         stack.Push(new Token(2, 4));
-                        stack.Push(new Token(5, 0)); 
+                        stack.Push(new Token(5, 0));
                         break;
                     }
 
@@ -684,7 +693,7 @@ namespace Translation_tables
                         stack.Push(new Token(2, 4));
                         stack.Push(new Token(3, 0));
                         stack.Push(new Token(0, 3));
-                        stack.Push(new Token(0, 1)); 
+                        stack.Push(new Token(0, 1));
                         break;
                     }
 
@@ -763,7 +772,7 @@ namespace Translation_tables
             int type = t.GetTokenType();
             int id = t.GetId();
 
-            if (type == 5)              
+            if (type == 5)
             {
                 if (inDeclaration)
                 {
@@ -775,6 +784,14 @@ namespace Translation_tables
                     else
                     {
                         declaredVars[varName] = true;
+                        int idx = variablesTable.Search(varName);
+                        if (idx != -1)
+                            variablesTable.UpdateLexemeAttributes(varName, VarType.Int, false, false);
+                        else
+                            variablesTable.InsertLexeme(varName, 0, false, VarType.Int, false);
+
+                        lastDeclaredVarName = varName;
+                        lastDeclHasInit = false;
                     }
                     inDeclaration = false;
                 }
@@ -785,6 +802,37 @@ namespace Translation_tables
                     if (!declaredVars.ContainsKey(varName))
                     {
                         errors.Add($"[Semantic ERROR] Line {t.GetLine()}, Pos {t.GetPos()}: Undeclared variable '{varName}'");
+                    }
+
+                    bool isAssignmentTarget = false;
+                    if (currentTokenIndex < inputTokens.Count)
+                    {
+                        Token nextToken = inputTokens[currentTokenIndex];
+                        if (nextToken.GetTokenType() == 2 && nextToken.GetId() == 4)
+                        {
+                            isAssignmentTarget = true;
+                        }
+                    }
+
+                    int idx = variablesTable.Search(varName);
+                    if (idx != -1)
+                    {
+                        var lex = variablesTable.dynamicElements[idx];
+
+                        if (isAssignmentTarget && lex.Const)
+                        {
+                            errors.Add($"[Semantic ERROR] Line {t.GetLine()}, Pos {t.GetPos()}: Cannot assign to constant '{varName}'");
+                        }
+
+                        if (!isAssignmentTarget && !lex.IsInitialized)
+                        {
+                            errors.Add($"[Semantic ERROR] Line {t.GetLine()}, Pos {t.GetPos()}: Variable '{varName}' is used before initialization");
+                        }
+                    }
+
+                    if (isAssignmentTarget)
+                    {
+                        assignmentTargetName = varName;
                     }
                 }
 
@@ -802,13 +850,29 @@ namespace Translation_tables
                     else
                     {
                         declaredVars[constName] = true;
+                        lastConstName = constName;
+
+                        int idx = variablesTable.Search(constName);
+                        if (idx != -1)
+                            variablesTable.UpdateLexemeAttributes(constName, VarType.Int, false, true);
+                        else
+                            variablesTable.InsertLexeme(constName, 0, true, VarType.Int, true);
                     }
-                    inConstDeclaration = false;
                 }
                 postfixOutput.Add(GetTokenString(t));
             }
             else if (type == 2)
             {
+                string op = GetTokenString(t);
+                if (op == "=" && inDeclaration)
+                {
+                    lastDeclHasInit = true;
+                }
+                if (op == "=" && inConstDeclaration)
+                {
+                    constExprCapture = true;
+                    constExprStart = postfixOutput.Count;
+                }
                 ProcessOperator(t);
             }
             else if (type == 1)
@@ -828,13 +892,194 @@ namespace Translation_tables
                     if (id == 1)
                     {
                         postfixOutput.Add(";");
-                        if (inDeclaration)
-                            inDeclaration = false;
-                        if (inConstDeclaration)
-                            inConstDeclaration = false;
+
+                        if (constExprCapture && inConstDeclaration && lastConstName != null)
+                        {
+                            var exprSegment = postfixOutput.GetRange(constExprStart, postfixOutput.Count - constExprStart - 2);
+                            int? value = EvaluatePostfix(exprSegment);
+                            if (value.HasValue)
+                            {
+                                int idx = variablesTable.Search(lastConstName);
+                                if (idx != -1)
+                                {
+                                    var lex = variablesTable.dynamicElements[idx];
+                                    lex.Value = value.Value;
+                                    variablesTable.dynamicElements[idx] = lex;
+                                }
+                            }
+                            constExprCapture = false;
+                        }
+
+                        if (inDeclaration && lastDeclaredVarName != null)
+                        {
+                            if (lastDeclHasInit)
+                            {
+                                variablesTable.UpdateLexemeAttributes(
+                                    lastDeclaredVarName, VarType.Int, true, false);
+                            }
+                        }
+
+                        if (!inDeclaration && !inConstDeclaration && assignmentTargetName != null)
+                        {
+                            int idx = variablesTable.Search(assignmentTargetName);
+                            if (idx != -1)
+                            {
+                                var lex = variablesTable.dynamicElements[idx];
+                                lex.IsInitialized = true;
+                                variablesTable.dynamicElements[idx] = lex;
+                            }
+                            assignmentTargetName = null;
+                        }
                     }
+                    if (inConstDeclaration && lastConstName != null)
+                    {
+                        variablesTable.UpdateLexemeAttributes(
+                            lastConstName, VarType.Int, true, true);
+                    }
+
+                    inDeclaration = false;
+                    inConstDeclaration = false;
+                    lastDeclaredVarName = null;
+                    lastConstName = null;
+                    lastDeclHasInit = false;
                 }
             }
+        }
+
+        private int? EvaluatePostfix(List<string> postfix)
+        {
+            var stack = new Stack<int>();
+            foreach (string token in postfix)
+            {
+                if (int.TryParse(token, out int num))
+                    stack.Push(num);
+                else if (IsOperator(token))
+                {
+                    if (stack.Count < 2) return null;
+                    int right = stack.Pop();
+                    int left = stack.Pop();
+                    int result = Compute(token, left, right);
+                    stack.Push(result);
+                }
+                else // идентификатор – не константа, вычислить невозможно
+                    return null;
+            }
+            return stack.Count == 1 ? stack.Pop() : null;
+        }
+
+        public void FoldConstants()
+        {
+            var operators = new HashSet<string> { "+", "-", "*", "&&", "||", "=" };
+
+            var segment = new List<string>();
+            var result = new List<string>();
+
+            foreach (string token in postfixOutput)
+            {
+                bool isSeparator = token == ";" || token == "{" || token == "}";
+
+                if (isSeparator)
+                {
+                    FoldSegment(segment);
+                    result.AddRange(segment);
+                    segment.Clear();
+                    result.Add(token);
+                }
+                else if (operators.Contains(token) || int.TryParse(token, out _) || variablesTable.Search(token) != -1)
+                {
+                    segment.Add(token);
+                }
+                else
+                {
+                    result.Add(token);
+                }
+            }
+
+            if (segment.Count > 0)
+            {
+                FoldSegment(segment);
+                result.AddRange(segment);
+            }
+
+            postfixOutput = result;
+        }
+
+        private void FoldSegment(List<string> expr)
+        {
+            for (int i = 0; i < expr.Count; i++)
+            {
+                string token = expr[i];
+                if (int.TryParse(token, out _)) continue;
+                int idx = variablesTable.Search(token);
+                if (idx != -1)
+                {
+                    var lex = variablesTable.dynamicElements[idx];
+                    if (lex.Const)
+                        expr[i] = lex.Value.ToString();
+                }
+            }
+
+            var stack = new Stack<(string val, bool isConst)>();
+            var folded = new List<string>();
+
+            foreach (string token in expr)
+            {
+                if (int.TryParse(token, out int num))
+                {
+                    stack.Push((token, true));
+                }
+                else if (IsOperator(token))
+                {
+                    if (stack.Count >= 2)
+                    {
+                        var right = stack.Pop();
+                        var left = stack.Pop();
+                        if (left.isConst && right.isConst)
+                        {
+                            int lv = int.Parse(left.val);
+                            int rv = int.Parse(right.val);
+                            int res = Compute(token, lv, rv);
+                            stack.Push((res.ToString(), true));
+                            continue;
+                        }
+                        else
+                        {
+                            stack.Push(left);
+                            stack.Push(right);
+                        }
+                    }
+                    folded.Add(token);
+                }
+                else
+                {
+                    stack.Push((token, false));
+                }
+            }
+
+            var temp = new Stack<string>();
+            while (stack.Count > 0)
+                temp.Push(stack.Pop().val);
+            while (temp.Count > 0)
+                folded.Add(temp.Pop());
+
+            expr.Clear();
+            expr.AddRange(folded);
+        }
+
+        private bool IsOperator(string s) =>
+            s == "+" || s == "-" || s == "*" || s == "&&" || s == "||";
+
+        private int Compute(string op, int a, int b)
+        {
+            return op switch
+            {
+                "+" => a + b,
+                "-" => a - b,
+                "*" => a * b,
+                "&&" => (a != 0 && b != 0) ? 1 : 0,
+                "||" => (a != 0 || b != 0) ? 1 : 0,
+                _ => 0
+            };
         }
     }
 }
