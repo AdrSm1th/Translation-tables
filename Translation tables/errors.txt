@@ -1,2 +1,4 @@
 [Semantic ERROR] Line 4, Pos 4: Cannot assign to constant 'PI'
 [Semantic ERROR] Line 7, Pos 16: Variable 'a' is used before initialization
+[Semantic ERROR] Line 13, Pos 8: Variable 'a' is already declared
+[Semantic ERROR] Line 15, Pos 4: break outside loop

@@ -9,4 +9,14 @@ int main()
    int c = a + 4;
 
    int d = 1 + 2 + 3 + PI;
+
+   int a = 0;
+
+   break;
+
+   int i;
+   for(i = 0; i; i = i + 1)
+   {
+      break;
+   }
 }

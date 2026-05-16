@@ -53,6 +53,8 @@ namespace Translation_tables
         private string assignmentTargetName = null;
         private bool constExprCapture = false;
         private int constExprStart = 0;
+        private int loopDepth = 0;
+        private const int END_LOOP_MARKER = -2;
 
         public List<string> Errors => errors;
 
@@ -194,6 +196,14 @@ namespace Translation_tables
             {
                 Token currentToken = GetCurrentToken();
                 object element = stack.Peek();
+
+                if (element is Token marker && marker.GetTokenType() == END_LOOP_MARKER)
+                {
+                    loopDepth--;
+                    stack.Pop();
+                    continue;
+                }
+
                 if (element is Token)
                 {
                     Token token = (Token)element;
@@ -301,7 +311,7 @@ namespace Translation_tables
 
                 case Nonterminal.StatementList:
                     {
-                        if (tokenType == 0 && (tokenId == 3 || tokenId == 2 || tokenId == 1)
+                        if (tokenType == 0 && (tokenId == 3 || tokenId == 2 || tokenId == 1 || tokenId == 0)
                             || tokenType == 5
                             || (tokenType == 1 && tokenId == 7)) return 2;
                         else if (tokenType == -1 || tokenType == 1 && tokenId == 8) return 3;
@@ -315,6 +325,7 @@ namespace Translation_tables
                         else if (tokenType == 0 && tokenId == 2) return 6;
                         else if (tokenType == 1 && tokenId == 7) return 7;
                         else if (tokenType == 0 && tokenId == 1) return 32;
+                        else if (tokenType == 0 && tokenId == 0) return 36;
                         else return -1;
                     }
 
@@ -521,6 +532,8 @@ namespace Translation_tables
 
                 case 10:
                     {
+                        loopDepth++;
+                        stack.Push(new Token(END_LOOP_MARKER, 0));
                         stack.Push(Nonterminal.Statement);
                         stack.Push(new Token(1, 4));
                         stack.Push(Nonterminal.OptExpr);
@@ -706,6 +719,13 @@ namespace Translation_tables
                     stack.Push(new Token(2, 4));
                     stack.Push(new Token(5, 0));
                     break;
+
+                case 36:
+                    {
+                        stack.Push(new Token(1, 1));
+                        stack.Push(new Token(0, 0));
+                        break;
+                    }
             }
         }
 
@@ -771,6 +791,19 @@ namespace Translation_tables
         {
             int type = t.GetTokenType();
             int id = t.GetId();
+
+            if (type == 0)
+            {
+                string word = GetTokenString(t);
+                if (word == "break")
+                {
+                    if (loopDepth == 0)
+                    {
+                        errors.Add($"[Semantic ERROR] Line {t.GetLine()}, Pos {t.GetPos()}: break outside loop");
+                    }
+                }
+                return;
+            }
 
             if (type == 5)
             {
@@ -961,7 +994,7 @@ namespace Translation_tables
                     int result = Compute(token, left, right);
                     stack.Push(result);
                 }
-                else // идентификатор – не константа, вычислить невозможно
+                else
                     return null;
             }
             return stack.Count == 1 ? stack.Pop() : null;
@@ -969,101 +1002,45 @@ namespace Translation_tables
 
         public void FoldConstants()
         {
-            var operators = new HashSet<string> { "+", "-", "*", "&&", "||", "=" };
-
-            var segment = new List<string>();
-            var result = new List<string>();
-
-            foreach (string token in postfixOutput)
+            for (int i = 0; i < postfixOutput.Count; i++)
             {
-                bool isSeparator = token == ";" || token == "{" || token == "}";
-
-                if (isSeparator)
-                {
-                    FoldSegment(segment);
-                    result.AddRange(segment);
-                    segment.Clear();
-                    result.Add(token);
-                }
-                else if (operators.Contains(token) || int.TryParse(token, out _) || variablesTable.Search(token) != -1)
-                {
-                    segment.Add(token);
-                }
-                else
-                {
-                    result.Add(token);
-                }
-            }
-
-            if (segment.Count > 0)
-            {
-                FoldSegment(segment);
-                result.AddRange(segment);
-            }
-
-            postfixOutput = result;
-        }
-
-        private void FoldSegment(List<string> expr)
-        {
-            for (int i = 0; i < expr.Count; i++)
-            {
-                string token = expr[i];
-                if (int.TryParse(token, out _)) continue;
+                string token = postfixOutput[i];
+                if (IsOperator(token) || token == "=" || token == ";" || int.TryParse(token, out _))
+                    continue;
                 int idx = variablesTable.Search(token);
-                if (idx != -1)
-                {
-                    var lex = variablesTable.dynamicElements[idx];
-                    if (lex.Const)
-                        expr[i] = lex.Value.ToString();
-                }
+                if (idx != -1 && variablesTable.dynamicElements[idx].Const)
+                    postfixOutput[i] = variablesTable.dynamicElements[idx].Value.ToString();
             }
 
-            var stack = new Stack<(string val, bool isConst)>();
-            var folded = new List<string>();
-
-            foreach (string token in expr)
+            var newOutput = new List<string>();
+            int pos = 0;
+            while (pos < postfixOutput.Count)
             {
-                if (int.TryParse(token, out int num))
+                int semiPos = postfixOutput.IndexOf(";", pos);
+                if (semiPos == -1)
                 {
-                    stack.Push((token, true));
+                    newOutput.AddRange(postfixOutput.Skip(pos));
+                    break;
                 }
-                else if (IsOperator(token))
+
+                var stmt = postfixOutput.GetRange(pos, semiPos - pos + 1);
+                int eqPos = stmt.IndexOf("=");
+                if (eqPos > 0 && eqPos < stmt.Count - 1)
                 {
-                    if (stack.Count >= 2)
+                    string leftVar = stmt[0];
+                    var expr = stmt.GetRange(1, eqPos - 1);
+                    int? val = EvaluatePostfix(expr);
+                    if (val.HasValue)
                     {
-                        var right = stack.Pop();
-                        var left = stack.Pop();
-                        if (left.isConst && right.isConst)
-                        {
-                            int lv = int.Parse(left.val);
-                            int rv = int.Parse(right.val);
-                            int res = Compute(token, lv, rv);
-                            stack.Push((res.ToString(), true));
-                            continue;
-                        }
-                        else
-                        {
-                            stack.Push(left);
-                            stack.Push(right);
-                        }
+                        stmt = new List<string> { leftVar, val.Value.ToString(), "=", ";" };
                     }
-                    folded.Add(token);
                 }
-                else
-                {
-                    stack.Push((token, false));
-                }
+
+                newOutput.AddRange(stmt);
+                pos = semiPos + 1;
             }
 
-            var temp = new Stack<string>();
-            while (stack.Count > 0)
-                temp.Push(stack.Pop().val);
-            while (temp.Count > 0)
-                folded.Add(temp.Pop());
-
-            expr.Clear();
-            expr.AddRange(folded);
+            postfixOutput = newOutput;
         }
 
         private bool IsOperator(string s) =>
